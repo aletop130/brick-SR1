@@ -1,0 +1,121 @@
+# Default Brick profile for Claude Code — materialized automatically by `brick claude on`.
+# Two-container stack: complexity classifier + Brick router. The classifier is reached
+# via Docker Compose service DNS (classifier:8094). No API key needed: the client's own
+# Anthropic bearer (OAuth subscription or API key) is forwarded verbatim.
+#
+# Model selection runs the FULL Brick skill router (capability classifier + skill
+# vectors + complexity) over the Claude pool, not a static complexity->model map.
+# The mode (eco/lite/mid/pro/max) sets skill_router.math.routing_preference and the
+# effort clamp window; `brick claude <mode>` rewrites those and restarts the router.
+
+model:
+  name: brick-claude
+  description: Default Brick router for Claude Code pass-through
+
+server_port: 8000
+auto_model_name: brick-claude
+
+# Model download registry: maps the local model path used by the skill router's
+# capability classifier to its Hugging Face repo, so the router downloads ModernBERT
+# on first start. Required whenever skill_router.enabled is true.
+mom_registry:
+  models/modernbert-capability-classifier: "massaindustries/modernbert-capability-classifier"
+
+# Stubs required by the config loader (not exercised on the /v1/messages path —
+# Claude models forward via anthropic_passthrough.upstream_url, not per-model base_url).
+providers:
+  regolo:
+    type: openai_compatible
+    base_url: https://api.regolo.ai/v1
+provider_profiles:
+  regolo:
+    type: openai_compatible
+    base_url: https://api.regolo.ai/v1
+provider_endpoints:
+  - name: regolo
+    provider_profile: regolo
+    weight: 1
+default_model: claude-sonnet-4-6
+model_config:
+  claude-haiku-4-5: { preferred_endpoints: ["regolo"], param_size: "1b" }
+  claude-sonnet-4-6: { preferred_endpoints: ["regolo"], param_size: "1b" }
+  claude-opus-4-8: { preferred_endpoints: ["regolo"], param_size: "1b" }
+
+# Complexity classifier: hosted on Regolo's OpenAI-compatible API by default
+# (model brick-complexity-pro). No local GPU/sidecar needed; the router expands
+# ${REGOLO_API_KEY} from the profile .env. Switch to a self-hosted local
+# classifier any time with: brick claude settings compute local
+complexity_service:
+  enabled: true
+  base_url: https://api.regolo.ai
+  protocol: openai
+  model_name: brick-complexity-pro
+  bearer_token: "${REGOLO_API_KEY}"
+  timeout_seconds: 8
+  auto_spawn: false
+
+# Full skill router over the Claude pool. dynamic_effort derives the per-query
+# output_config.effort from complexity, clamped by routing_preference.
+skill_router:
+  enabled: true
+  dynamic_effort: true
+  capabilities: [coding, creative_synthesis, instruction_following, math_reasoning, planning_agentic, world_knowledge]
+  capability_model:
+    model_id: models/modernbert-capability-classifier
+    repo_id: massaindustries/modernbert-capability-classifier
+    labels: [coding, creative_synthesis, instruction_following, math_reasoning, planning_agentic, world_knowledge]
+    use_cpu: true
+  complexity_model:
+    model_id: regolo/brick-complexity-pro
+    base_model_id: Qwen/Qwen3.5-0.8B
+    base_url: https://api.regolo.ai
+    protocol: openai
+    model_name: brick-complexity-pro
+    bearer_token: "${REGOLO_API_KEY}"
+    timeout_seconds: 8
+    auto_spawn: false
+  math:
+    routing_preference: 0
+    # Softened preference knob (paper default is 2.920351): widens the transition
+    # so the effort modes (see clientEffortToPreference) yield a graded opus share
+    # (high ~1/3, xhigh ~2/3, max all) instead of a near-step jump. Retuning this
+    # must stay in sync with the effort->preference anchors in effort.go.
+    preference_power: 2.2
+    tau: { easy: 0.55, medium: 0.72, hard: 0.88 }
+  models:
+    - model: claude-haiku-4-5
+      skill_vector: [0.70, 0.66, 0.72, 0.78, 0.54, 0.76]
+      cost_weight: 0.1
+      use_reasoning: false
+    - model: claude-sonnet-4-6
+      skill_vector: [0.82, 0.86, 0.83, 0.88, 0.76, 0.88]
+      cost_weight: 0.4
+      use_reasoning: true
+    - model: claude-opus-4-8
+      skill_vector: [0.90, 0.92, 0.86, 0.93, 0.86, 0.93]
+      cost_weight: 1.0
+      use_reasoning: true
+  keyword_rules: []
+
+# Anthropic pass-through transport. use_skill_router routes via the skill_router
+# block above; model_map is the fallback when the skill router errors or the
+# prompt text is empty.
+anthropic_passthrough:
+  enabled: true
+  use_skill_router: true
+  # route_subagents: when true, requests arriving with an explicit native model
+  # (Claude Code subagents) go through the skill router instead of bypassing it.
+  route_subagents: false
+  upstream_url: https://api.anthropic.com
+  extra_usage_enabled: false
+  context_1m_threshold_bytes: 600000
+  model_map:
+    easy: claude-haiku-4-5
+    medium: claude-sonnet-4-6
+    hard: claude-opus-4-8
+  model_map_1m:
+    easy: claude-sonnet-4-6
+    medium: claude-sonnet-4-6
+    hard: claude-opus-4-8
+
+decisions: []
