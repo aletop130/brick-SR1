@@ -178,7 +178,7 @@ Brick routing is per request. In Claude Code workflows and subagents, each agent
 
 ---
 
-## 🤖 Use it on Codex
+## 🤖 Use it on Codex (Still in Beta)
 
 The same idea behind OpenAI Codex: Brick sits in front of Codex and routes each request across your model pool, so you cut cost on easy turns and can drive Codex with non-OpenAI models through one OpenAI-compatible endpoint.
 
