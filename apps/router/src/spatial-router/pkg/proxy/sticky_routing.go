@@ -22,6 +22,9 @@ import (
 //   - model:     the model to actually use (candidate, or the held-onto previous).
 //   - under:     under-capacity residual recomputed for the final model, so the
 //     downstream autonomous-effort bump reflects the model actually used.
+//   - switchDelta: the prefix-reprocessing cost (per-1M-token price units) that a
+//     hold avoided this turn, surfaced for the routing event log. 0 on any early
+//     return (no identity, no pricing, first turn) where no comparison was made.
 //
 // This lives entirely in the handler layer and never touches pkg/brickrouting:
 // the calibrated scoring core is unchanged, only its output is post-processed.
@@ -31,17 +34,17 @@ func (s *Server) applyStickyRouting(
 	route *brickrouting.Result,
 	candidateModel string,
 	candidateUnder float64,
-) (stickyKey, model string, under float64) {
+) (stickyKey, model string, under, switchDelta float64) {
 	model, under = candidateModel, candidateUnder
 	if s.stickyStore == nil || route == nil {
-		return "", model, under
+		return "", model, under, 0
 	}
 
 	system, firstUser := extractAnthropicIdentityParts(body)
 	if system == "" && firstUser == "" {
 		// No stable prefix to key on: cannot participate in sticky routing.
 		logging.Debugf("sticky: identity_miss reason=empty_prompt candidate=%s", candidateModel)
-		return "", model, under
+		return "", model, under, 0
 	}
 	key := sticky.HashIdentity(system, firstUser)
 
@@ -51,19 +54,19 @@ func (s *Server) applyStickyRouting(
 		// summarization) so the prior entry is unreachable. Either way the
 		// candidate stands this turn; we still record it afterwards.
 		logging.Debugf("sticky: no_prev key=%s candidate=%s", key, candidateModel)
-		return key, model, under
+		return key, model, under, 0
 	}
 
 	if s.pricingTable == nil {
 		logging.Warnf("sticky: pricing unavailable, hysteresis skipped; candidate=%s", candidateModel)
-		return key, model, under
+		return key, model, under, 0
 	}
 	prevPrice, okPrev := s.pricingTable.Price(prev.LastModel)
 	candPrice, okCand := s.pricingTable.Price(candidateModel)
 	if !okPrev || !okCand {
 		logging.Warnf("sticky: missing price prev=%s(ok=%v) cand=%s(ok=%v), hysteresis skipped",
 			prev.LastModel, okPrev, candidateModel, okCand)
-		return key, model, under
+		return key, model, under, 0
 	}
 
 	in := sticky.SwitchInputs{
@@ -81,7 +84,7 @@ func (s *Server) applyStickyRouting(
 	final, switched, reason := sticky.DecideModel(in)
 	// SwitchDeltaUSD is the prefix-reprocessing cost a hold avoids (per-1M-token
 	// price units, same scale as pricing.yaml). Positive on a held costed switch.
-	switchDelta := sticky.SwitchDeltaUSD(in)
+	switchDelta = sticky.SwitchDeltaUSD(in)
 
 	if final != model {
 		model = final
@@ -91,7 +94,20 @@ func (s *Server) applyStickyRouting(
 	logging.Infof("sticky: reason=%s prev=%s candidate=%s final=%s switched=%t prev_ctx_tokens=%d est_switch_delta_price_units=%.4f margin=%.3f",
 		reason, prev.LastModel, candidateModel, final, switched, prev.LastContextTokens, switchDelta, in.ScoreMargin)
 
-	return key, model, under
+	return key, model, under, switchDelta
+}
+
+// anthropicSessionKey derives the stable conversation identity (system prompt +
+// first user turn) used to group turns of the same dev session in the routing
+// event log. Returns "" when there is no stable prefix to key on. Unlike
+// applyStickyRouting this is mode-independent: it is computed for every routed
+// request so off/sticky/orchestrator events share one session-counting basis.
+func anthropicSessionKey(body []byte) string {
+	system, firstUser := extractAnthropicIdentityParts(body)
+	if system == "" && firstUser == "" {
+		return ""
+	}
+	return sticky.HashIdentity(system, firstUser)
 }
 
 // scoreForModel returns the routing score (J_m, lower is better) of the named

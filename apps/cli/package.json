@@ -55,6 +55,9 @@
       "claude settings": {
         "description": "Configure Brick Claude: context-awareness and classifier compute"
       },
+      "claude stats": {
+        "description": "Routing observability: per-mode event aggregates and promotion-gate signals"
+      },
       "codex": {
         "description": "Inspect Brick ↔ OpenAI Codex wiring (status, routing stats)"
       },

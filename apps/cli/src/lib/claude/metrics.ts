@@ -90,6 +90,38 @@ export async function fetchEconomics(baseUrl: string): Promise<EconomicsResponse
   }
 }
 
+export type RoutingModeStats = {
+  mode: string;
+  requests: number;
+  sessions: number;
+  held_requests: number;
+  latency_p50_ms: number;
+  latency_p95_ms: number;
+  median_switch_delta_price_units: number;
+  median_switch_delta_price_units_held: number;
+};
+
+export type RoutingStatsResponse = {
+  modes: RoutingModeStats[];
+  total_requests: number;
+  total_sessions: number;
+  note?: string;
+};
+
+// Per-mode routing event aggregates that feed the promotion gate (distinct dev
+// sessions, median realized sticky savings, p50/p95 end-to-end latency). Served
+// by the router from its append-only routing_events.jsonl; null when the router
+// is unreachable or predates the endpoint.
+export async function fetchRoutingStats(baseUrl: string): Promise<RoutingStatsResponse | null> {
+  try {
+    const r = await fetch(`${baseUrl}/api/v1/routing/stats`, { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) return null;
+    return (await r.json()) as RoutingStatsResponse;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchMetrics(baseUrl: string): Promise<ParsedMetrics | null> {
   // The metrics endpoint is exposed on a separate port — try the same host on
   // the typical metrics ports first, then fall back to the proxy port itself.

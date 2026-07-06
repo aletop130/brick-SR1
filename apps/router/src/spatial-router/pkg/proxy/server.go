@@ -51,6 +51,16 @@ type Server struct {
 	// per request. Nil when pricing.yaml is absent/unparseable, in which case
 	// sticky hysteresis is skipped (the router's candidate model stands).
 	pricingTable *economics.PricingTable
+
+	// routingEventLog appends one JSONL record per routed request (mode,
+	// candidate/served model, session identity, sticky switch delta, e2e
+	// latency), feeding the offline promotion-gate aggregator. Nil when the
+	// sink cannot be opened; append is then a no-op. Never affects serving.
+	routingEventLog *routingEventLogger
+	// routingEventPath is where routingEventLog writes, kept separately so the
+	// /api/v1/routing/stats handler can read+aggregate the log even when the
+	// writer is disabled (e.g. a prior run's file still on disk).
+	routingEventPath string
 }
 
 // economicsSnapshotInterval is how often the economics store is flushed to
@@ -70,6 +80,11 @@ func NewServer(cfg *config.RouterConfig, configPath string, port int) *Server {
 	}
 
 	pricingPath := filepath.Join(filepath.Dir(configPath), "pricing.yaml")
+
+	// Append-only routing event log, next to the config by the same convention
+	// as the economics snapshot. Best-effort: a failed open disables it.
+	routingEventPath := filepath.Join(filepath.Dir(configPath), "routing_events.jsonl")
+	routingEventLog := newRoutingEventLogger(routingEventPath)
 
 	// Sticky routing state. The TTL comes from config so it can track the
 	// upstream prompt-cache TTL (default 6 min, just over the 5-min cache TTL).
@@ -93,6 +108,8 @@ func NewServer(cfg *config.RouterConfig, configPath string, port int) *Server {
 		economicsSnapshotPath: snapshotPath,
 		stickyStore:           sticky.New(stickyTTL),
 		pricingTable:          pricingTable,
+		routingEventLog:       routingEventLog,
+		routingEventPath:      routingEventPath,
 	}
 }
 
@@ -117,6 +134,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("/api/v1/diag/classifier", s.handleDiagClassifier)
 	mux.HandleFunc("/api/v1/metrics/reset", s.handleMetricsReset) // clear brick_cc_* routing counters
 	mux.HandleFunc("/api/v1/economics", s.handleEconomics)        // token usage + real savings vs. all-expensive baseline
+	mux.HandleFunc("/api/v1/routing/stats", s.handleRoutingStats) // per-mode routing event aggregates (promotion-gate harness)
 	// Also expose Prometheus metrics on the main proxy port so `brick claude status`
 	// can read routing stats without publishing the dedicated metrics port (9190).
 	mux.Handle("/metrics", promhttp.Handler())

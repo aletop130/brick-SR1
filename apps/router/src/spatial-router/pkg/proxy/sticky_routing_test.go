@@ -56,7 +56,7 @@ func TestApplySticky_NoPrevReturnsKeyAndCandidate(t *testing.T) {
 	apCfg := &config.AnthropicPassthroughConfig{}
 	route := routeWith("claude-opus-4-8", map[string]float64{"claude-opus-4-8": 0.40, "claude-haiku-4-5": 0.50})
 
-	key, model, _ := s.applyStickyRouting(apCfg, []byte(stickyBody), route, "claude-opus-4-8", 0)
+	key, model, _, _ := s.applyStickyRouting(apCfg, []byte(stickyBody), route, "claude-opus-4-8", 0)
 	if key == "" {
 		t.Fatal("expected a non-empty sticky key for an identifiable conversation")
 	}
@@ -78,7 +78,7 @@ func TestApplySticky_HoldsBelowMargin(t *testing.T) {
 	// Router now wants opus, but only a small quality gain (0.50 -> 0.45 = 0.05 < margin).
 	route := routeWith("claude-opus-4-8", map[string]float64{"claude-opus-4-8": 0.45, "claude-haiku-4-5": 0.50})
 
-	_, model, _ := s.applyStickyRouting(apCfg, []byte(stickyBody), route, "claude-opus-4-8", 0)
+	_, model, _, _ := s.applyStickyRouting(apCfg, []byte(stickyBody), route, "claude-opus-4-8", 0)
 	if model != "claude-haiku-4-5" {
 		t.Fatalf("expected hold on cheap model below margin, got %q", model)
 	}
@@ -95,7 +95,7 @@ func TestApplySticky_SwitchesAboveMargin(t *testing.T) {
 	// Large quality gain (0.50 -> 0.20 = 0.30 > margin): the switch is justified.
 	route := routeWith("claude-opus-4-8", map[string]float64{"claude-opus-4-8": 0.20, "claude-haiku-4-5": 0.50})
 
-	_, model, _ := s.applyStickyRouting(apCfg, []byte(stickyBody), route, "claude-opus-4-8", 0)
+	_, model, _, _ := s.applyStickyRouting(apCfg, []byte(stickyBody), route, "claude-opus-4-8", 0)
 	if model != "claude-opus-4-8" {
 		t.Fatalf("expected switch to opus above margin, got %q", model)
 	}
@@ -115,7 +115,7 @@ func TestApplySticky_CheapDownswitchAllowed(t *testing.T) {
 	// delta = 40000*(1.25*1.0 - 0.10*5.0) = 40000*(1.25-0.5) > 0, so this is NOT a
 	// cheap downswitch under these prices; hysteresis applies and the small model
 	// loses on score -> hold opus. (Guards against a naive "downswitch always free".)
-	_, model, _ := s.applyStickyRouting(apCfg, []byte(stickyBody), route, "claude-haiku-4-5", 0)
+	_, model, _, _ := s.applyStickyRouting(apCfg, []byte(stickyBody), route, "claude-haiku-4-5", 0)
 	if model != "claude-opus-4-8" {
 		t.Fatalf("expected hold on opus (haiku prefix reprocess not cheaper), got %q", model)
 	}
@@ -126,7 +126,7 @@ func TestApplySticky_EmptyPromptNoKey(t *testing.T) {
 	apCfg := &config.AnthropicPassthroughConfig{}
 	route := routeWith("claude-opus-4-8", map[string]float64{"claude-opus-4-8": 0.40})
 
-	key, model, _ := s.applyStickyRouting(apCfg, []byte(`{"messages":[]}`), route, "claude-opus-4-8", 0)
+	key, model, _, _ := s.applyStickyRouting(apCfg, []byte(`{"messages":[]}`), route, "claude-opus-4-8", 0)
 	if key != "" {
 		t.Fatalf("expected empty key for unidentifiable conversation, got %q", key)
 	}

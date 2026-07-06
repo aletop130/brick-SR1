@@ -51,7 +51,7 @@ func TestStickyEndToEnd(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/messages", bytes.NewReader([]byte(stickyBody)))
 	rec := httptest.NewRecorder()
-	s.forwardAnthropicRequest(rec, req, apCfg, []byte(stickyBody), "claude-opus-4-8", "hard", "", true, false, key)
+	s.forwardAnthropicRequest(rec, req, apCfg, []byte(stickyBody), "claude-opus-4-8", "hard", "", true, false, key, nil)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("forward status = %d, want 200", rec.Code)
@@ -74,7 +74,7 @@ func TestStickyEndToEnd(t *testing.T) {
 		"claude-haiku-4-5": 0.50,
 		"claude-opus-4-8":  0.48, // opus slightly better, well within margin
 	})
-	_, model, _ := s.applyStickyRouting(apCfg, []byte(stickyBody), route, "claude-haiku-4-5", 0)
+	_, model, _, _ := s.applyStickyRouting(apCfg, []byte(stickyBody), route, "claude-haiku-4-5", 0)
 	if model != "claude-opus-4-8" {
 		t.Fatalf("turn 2 should hold warm opus, got %q", model)
 	}
