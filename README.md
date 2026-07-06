@@ -514,8 +514,6 @@ Pre-built PDF: [`docs/paper/paper.pdf`](docs/paper/paper.pdf) · compile with `c
 
 ### 📈 Star history
 
-## Star History
-
 <a href="https://www.star-history.com/?repos=brick-SR1%2Fbrick-SR1&type=date&legend=top-left">
  <picture>
    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=brick-SR1/brick-SR1&type=date&theme=dark&legend=top-left" />
