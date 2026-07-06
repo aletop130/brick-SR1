@@ -514,11 +514,12 @@ Pre-built PDF: [`docs/paper/paper.pdf`](docs/paper/paper.pdf) · compile with `c
 
 ### 📈 Star history
 
-<a href="https://www.star-history.com/#regolo-ai/brick-sr1&Date">
+## Star History
+
+<a href="https://www.star-history.com/?repos=brick-SR1%2Fbrick-SR1&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=regolo-ai/brick-sr1&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=regolo-ai/brick-sr1&type=Date" />
-   <img alt="Star history chart" src="https://api.star-history.com/svg?repos=regolo-ai/brick-sr1&type=Date" width="600" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=brick-SR1/brick-SR1&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=brick-SR1/brick-SR1&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=brick-SR1/brick-SR1&type=date&legend=top-left" />
  </picture>
 </a>
-
