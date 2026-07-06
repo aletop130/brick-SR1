@@ -68,7 +68,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=brick-complexity
 
       - name: Trivy scan (gate on fixable CRITICAL)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.30.0
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           format: sarif
