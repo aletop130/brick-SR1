@@ -11,10 +11,12 @@ import {
   applySubagentRouting,
   applyModelRouting,
   applyThinkingRouting,
+  applyRoutingMode,
   REGOLO_API_KEY_ENV,
   REGOLO_CLASSIFIER_MODEL,
   type SettingsApplyResult,
   type ComputeMode,
+  type RoutingMode,
 } from './settings-apply.js';
 import { err, info, ok, warn } from '../ui/banners.js';
 
@@ -131,6 +133,37 @@ export async function runThinkingRouting(
     reportRestart(res);
     const w = readWiring();
     if (w) writeWiring({ ...w, thinkingRouting: enabled });
+  } catch (e: any) {
+    err(e?.message ?? String(e));
+    exit(1);
+  }
+}
+
+const ROUTING_MODE_MESSAGE: Record<RoutingMode, (profile: string) => string> = {
+  off: (p) => `cache-aware routing OFF for profile '${p}': per-request routing, no cross-turn memory.`,
+  sticky: (p) =>
+    `cache-aware sticky routing ON for profile '${p}': Brick stays on a conversation's model unless a switch beats the prompt-cache cost.`,
+  orchestrator: (p) =>
+    `orchestrator routing (SHADOW) for profile '${p}': computed for evaluation, not yet served.`,
+};
+
+export async function runRoutingMode(
+  mode: RoutingMode,
+  exit: (code: number) => never,
+): Promise<void> {
+  let profile: string;
+  try {
+    profile = resolveProfile();
+  } catch (e: any) {
+    err(e?.message ?? String(e));
+    exit(1);
+  }
+  try {
+    const res = await applyRoutingMode(profile, mode);
+    ok(ROUTING_MODE_MESSAGE[mode](profile));
+    reportRestart(res);
+    const w = readWiring();
+    if (w) writeWiring({ ...w, routingMode: mode });
   } catch (e: any) {
     err(e?.message ?? String(e));
     exit(1);

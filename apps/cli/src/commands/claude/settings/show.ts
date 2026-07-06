@@ -35,10 +35,14 @@ export default class ClaudeSettingsShow extends Command {
     const isRemote = typeof cs.base_url === 'string' && !/127\.0\.0\.1|localhost/.test(cs.base_url);
     const compute = wiring?.computeMode ?? (isRemote ? 'api' : 'local');
     const subagents = obj?.anthropic_passthrough?.route_subagents ? 'on (routed through Brick)' : 'off (bypass)';
+    const rmRaw = obj?.anthropic_passthrough?.routing_mode;
+    const routingMode =
+      rmRaw === 'sticky' ? 'sticky (cache-aware)' : rmRaw === 'orchestrator' ? 'orchestrator (shadow)' : 'off (per-request)';
 
     print(`profile:            ${profile}`);
     print(`context-awareness:  ${ctx}`);
     print(`compute:            ${compute}${cs.base_url ? `  (${cs.base_url})` : ''}`);
     print(`subagent routing:   ${subagents}`);
+    print(`cache-aware routing:${routingMode}`);
   }
 }

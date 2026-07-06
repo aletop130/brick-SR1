@@ -60,6 +60,15 @@ type BrickConfig struct {
 	VisionModel     string              `yaml:"vision_model,omitempty"`    // e.g., "qwen3-vl-32b"
 	VisionEndpoint  string              `yaml:"vision_endpoint,omitempty"` // e.g., "https://api.regolo.ai/v1/chat/completions"
 	OCRMinTextLen   int                 `yaml:"ocr_min_text_length,omitempty"`
+
+	// RoutingMode mirrors AnthropicPassthroughConfig.RoutingMode for the Codex
+	// (OpenAI-compatible) path. "" / "off" (default) keeps historic per-request
+	// routing. See EffectiveRoutingMode. Note: the Codex forwarders do not report
+	// Anthropic prompt-cache tokens, so sticky economics are weaker here than on
+	// the Claude path; the toggle exists for parity and shadow-mode B.
+	RoutingMode       string  `yaml:"routing_mode,omitempty"`
+	StickyTTLSeconds  int     `yaml:"sticky_ttl_seconds,omitempty"`
+	StickyScoreMargin float64 `yaml:"sticky_score_margin,omitempty"`
 }
 
 // GetOCRMinTextLen returns the minimum OCR text length to consider valid, defaulting to 10.
@@ -93,6 +102,33 @@ func (b *BrickConfig) EffectiveContextWindowK() int {
 		return b.ContextWindow.K
 	}
 	return 8
+}
+
+// EffectiveRoutingMode returns a validated routing mode, defaulting to
+// RoutingModeOff for an absent or unrecognized value.
+func (b *BrickConfig) EffectiveRoutingMode() string {
+	switch b.RoutingMode {
+	case RoutingModeSticky, RoutingModeOrchestrator:
+		return b.RoutingMode
+	default:
+		return RoutingModeOff
+	}
+}
+
+// EffectiveStickyTTLSeconds returns the configured sticky-entry TTL or 360s.
+func (b *BrickConfig) EffectiveStickyTTLSeconds() int {
+	if b.StickyTTLSeconds > 0 {
+		return b.StickyTTLSeconds
+	}
+	return 360
+}
+
+// EffectiveStickyScoreMargin returns the configured switch margin or 0.15.
+func (b *BrickConfig) EffectiveStickyScoreMargin() float64 {
+	if b.StickyScoreMargin > 0 {
+		return b.StickyScoreMargin
+	}
+	return 0.15
 }
 
 // Validate checks configured modality providers when brick is enabled. Text-only

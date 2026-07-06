@@ -16,6 +16,7 @@ import (
 	"github.com/regolo-ai/brick-SR1/apps/router/src/spatial-router/pkg/economics"
 	"github.com/regolo-ai/brick-SR1/apps/router/src/spatial-router/pkg/observability/logging"
 	"github.com/regolo-ai/brick-SR1/apps/router/src/spatial-router/pkg/observability/metrics"
+	"github.com/regolo-ai/brick-SR1/apps/router/src/spatial-router/pkg/sticky"
 )
 
 // Server is the Brick HTTP proxy server.
@@ -40,6 +41,16 @@ type Server struct {
 	// survives a router restart instead of resetting to zero. Sits next to
 	// the router config by the same convention as pricingPath.
 	economicsSnapshotPath string
+
+	// stickyStore holds per-conversation cache-aware routing state for
+	// RoutingModeSticky. Always constructed; only consulted when the Anthropic
+	// passthrough routing mode is "sticky". See pkg/proxy/sticky_routing.go.
+	stickyStore *sticky.Store
+	// pricingTable is loaded once at startup so the sticky hysteresis can price
+	// the prompt-cache invalidation cost of a switch without an on-demand load
+	// per request. Nil when pricing.yaml is absent/unparseable, in which case
+	// sticky hysteresis is skipped (the router's candidate model stands).
+	pricingTable *economics.PricingTable
 }
 
 // economicsSnapshotInterval is how often the economics store is flushed to
@@ -57,13 +68,31 @@ func NewServer(cfg *config.RouterConfig, configPath string, port int) *Server {
 	if err := store.LoadSnapshot(snapshotPath); err != nil {
 		logging.Warnf("Economics: failed to load prior usage snapshot from %s: %v", snapshotPath, err)
 	}
+
+	pricingPath := filepath.Join(filepath.Dir(configPath), "pricing.yaml")
+
+	// Sticky routing state. The TTL comes from config so it can track the
+	// upstream prompt-cache TTL (default 6 min, just over the 5-min cache TTL).
+	stickyTTL := time.Duration(cfg.AnthropicPassthrough.EffectiveStickyTTLSeconds()) * time.Second
+
+	// Preload the pricing table so sticky hysteresis can price a switch without
+	// a per-request file read. Best-effort: a missing/invalid pricing.yaml just
+	// disables the hysteresis (candidate model stands), it is never fatal.
+	pricingTable, perr := economics.LoadPricingTable(pricingPath)
+	if perr != nil {
+		logging.Warnf("Sticky routing: pricing table not loaded (%v); cache-aware hysteresis disabled until pricing.yaml exists", perr)
+		pricingTable = nil
+	}
+
 	return &Server{
 		cfg:                   cfg,
 		configPath:            configPath,
 		port:                  port,
 		economicsStore:        store,
-		pricingPath:           filepath.Join(filepath.Dir(configPath), "pricing.yaml"),
+		pricingPath:           pricingPath,
 		economicsSnapshotPath: snapshotPath,
+		stickyStore:           sticky.New(stickyTTL),
+		pricingTable:          pricingTable,
 	}
 }
 

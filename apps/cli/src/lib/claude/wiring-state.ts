@@ -24,6 +24,8 @@ export interface WiringState {
   thinkingRouting?: boolean;
   /** Model pinned when modelRouting is off (e.g. "claude-opus-4-8"). Optional. */
   fixedModel?: string;
+  /** Cache-aware routing mode: 'off' (default), 'sticky', or 'orchestrator'. Optional. */
+  routingMode?: 'off' | 'sticky' | 'orchestrator';
 }
 
 function wiringPath(): string {
