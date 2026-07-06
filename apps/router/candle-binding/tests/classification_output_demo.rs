@@ -1,3 +1,8 @@
+// Disabled: this test targets `model_architectures::generative::qwen3_causal`,
+// a module that does not exist in the crate. `cfg(any())` is always false, so
+// the file is excluded from compilation until the qwen3_causal API lands.
+#![cfg(any())]
+
 //! Demonstration of classification results with realistic scenarios
 //!
 //! This test shows what classification outputs look like and verifies they make sense.
