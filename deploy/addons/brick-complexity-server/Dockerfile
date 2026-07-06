@@ -2,8 +2,12 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# System dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# System dependencies. apt-get upgrade patches OS packages that have fixes
+# available at build time (reduces Trivy HIGH findings on the base image).
+# Note: 2 perl-base CRITICALs (CVE-2026-42496, CVE-2026-8376) have no upstream
+# fix yet and cannot be resolved here; they are tracked/monitored.
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 

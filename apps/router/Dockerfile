@@ -113,13 +113,21 @@ RUN cd src/spatial-router && \
 # ─── Stage 3: Runtime ───
 FROM debian:bookworm-slim
 
-# Install runtime dependencies and Python for HuggingFace
-RUN apt-get update && apt-get install -y \
+# Install runtime dependencies and Python for HuggingFace.
+# --no-install-recommends is critical: without it python3-pip pulls in the full
+# build toolchain (build-essential, gcc-12, g++-12, python3-dev) as Recommends,
+# which lands in the final image and accounts for the bulk of the Trivy
+# CRITICAL/HIGH findings. hf[cli] wheels are pure-python (no compilation needed),
+# so the toolchain is never used at runtime. python3-pip itself is purged after
+# installing the CLI since it is not needed at runtime either.
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     ca-certificates \
     openssl \
     python3 \
     python3-pip \
     && pip3 install --break-system-packages --no-cache-dir huggingface_hub[cli] \
+    && apt-get purge -y python3-pip \
+    && apt-get autoremove -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

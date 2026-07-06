@@ -23,6 +23,7 @@ on:
 permissions:
   contents: read
   packages: write
+  security-events: write
 
 jobs:
   publish:
@@ -63,14 +64,47 @@ jobs:
             VER="${{ inputs.tag }}"
             echo "tags=${IMAGE}:${VER}" >> "$GITHUB_OUTPUT"
           fi
+          echo "first=${IMAGE}:${VER}" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push
+      - name: Free disk space (classifier image is large)
+        if: matrix.image == 'brick-cc-classifier'
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - name: Build image (load locally for scan)
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
-          push: true
+          load: true
+          push: false
           platforms: linux/amd64
           tags: ${{ steps.tags.outputs.tags }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
+
+      - name: Trivy scan (gate on fixable CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ steps.tags.outputs.first }}
+          format: sarif
+          output: trivy-${{ matrix.image }}.sarif
+          severity: CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+          timeout: 30m
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-${{ matrix.image }}.sarif
+          category: ${{ matrix.image }}
+
+      - name: Push image
+        run: |
+          for tag in $(echo "${{ steps.tags.outputs.tags }}" | tr ',' ' '); do
+            echo "Pushing $tag"
+            docker push "$tag"
+          done

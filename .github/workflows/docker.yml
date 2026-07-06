@@ -22,6 +22,7 @@ jobs:
     permissions:
       contents: read
       packages: write    # push to GHCR via GITHUB_TOKEN
+      security-events: write   # upload Trivy SARIF to the Security tab
     steps:
       - uses: actions/checkout@v4
 
@@ -68,17 +69,42 @@ jobs:
 
       # --- Build & push ---
 
-      - name: Build and push (router)
+      # --- Build locally, scan, then push (Trivy gate before publish) ---
+
+      - name: Build image (load locally for scan)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./apps/router/Dockerfile
           platforms: linux/amd64
-          push: true
+          load: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=brick-router
           cache-to: type=gha,scope=brick-router,mode=max
 
-      - name: Image digest
-        run: echo "Pushed digest ${{ steps.meta.outputs.tags }}"
+      - name: Trivy scan (gate on fixable CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          format: sarif
+          output: trivy-router.sarif
+          severity: CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+          timeout: 15m
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-router.sarif
+          category: brick-router
+
+      - name: Push image
+        run: |
+          for tag in ${{ steps.meta.outputs.tags }}; do
+            echo "Pushing $tag"
+            docker push "$tag"
+          done
