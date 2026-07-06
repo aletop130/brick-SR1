@@ -64,6 +64,14 @@
     },
     "hooks": {
       "init": "./dist/hooks/init.js"
+    },
+    "plugins": [
+      "@oclif/plugin-warn-if-update-available"
+    ],
+    "warn-if-update-available": {
+      "timeoutInDays": 1,
+      "registry": "https://registry.npmjs.org",
+      "message": "A new version of @regolo-ai/brick is available. Run `brick update` to upgrade."
     }
   },
   "scripts": {
@@ -77,6 +85,7 @@
   "dependencies": {
     "@clack/prompts": "^0.10.0",
     "@oclif/core": "^4.0.0",
+    "@oclif/plugin-warn-if-update-available": "^3.0.0",
     "chalk": "^5.3.0",
     "cli-table3": "^0.6.5",
     "execa": "^9.0.0",
