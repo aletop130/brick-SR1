@@ -33,17 +33,17 @@ func (c *InMemoryCache) IsEnabled() bool {
 }
 
 // AddPendingRequest stores a request awaiting its response
-func (c *InMemoryCache) AddPendingRequest(requestID string, model string, query string, requestBody []byte) error {
+func (c *InMemoryCache) AddPendingRequest(requestID string, model string, query string, requestBody []byte, ttlSeconds int) error {
 	return nil
 }
 
 // UpdateWithResponse completes a pending request with its response
-func (c *InMemoryCache) UpdateWithResponse(requestID string, responseBody []byte) error {
+func (c *InMemoryCache) UpdateWithResponse(requestID string, responseBody []byte, ttlSeconds int) error {
 	return nil
 }
 
 // AddEntry stores a complete request-response pair
-func (c *InMemoryCache) AddEntry(requestID string, model string, query string, requestBody, responseBody []byte) error {
+func (c *InMemoryCache) AddEntry(requestID string, model string, query string, requestBody, responseBody []byte, ttlSeconds int) error {
 	return nil
 }
 
