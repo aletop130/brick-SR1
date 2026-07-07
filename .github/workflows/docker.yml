@@ -115,8 +115,11 @@ jobs:
           category: brick-router
 
       - name: Push image
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
         run: |
-          for tag in ${{ steps.meta.outputs.tags }}; do
+          echo "$TAGS" | while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
             echo "Pushing $tag"
             docker push "$tag"
           done
