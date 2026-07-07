@@ -33,7 +33,7 @@ impl BertSimilarity {
     /// * `Result<Self>` - Initialized BertSimilarity instance
     ///
     /// ## Examples
-    /// ```rust
+    /// ```ignore
     /// let similarity = BertSimilarity::new("sentence-transformers/all-MiniLM-L6-v2", false)?;
     /// ```
     pub fn new(model_id: &str, use_cpu: bool) -> Result<Self> {

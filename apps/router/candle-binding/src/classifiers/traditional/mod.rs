@@ -16,5 +16,5 @@ pub use modernbert_classifier::*;
 // Test modules
 #[cfg(test)]
 pub mod batch_processor_test;
-#[cfg(test)]
+#[cfg(all(test, feature = "model-tests"))]
 pub mod modernbert_classifier_test;

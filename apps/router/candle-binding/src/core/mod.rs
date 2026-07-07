@@ -33,9 +33,9 @@ pub use tokenization::{
 // Test modules (only compiled in test builds)
 #[cfg(test)]
 pub mod config_loader_test;
-#[cfg(test)]
+#[cfg(all(test, feature = "model-tests"))]
 pub mod similarity_test;
-#[cfg(test)]
+#[cfg(all(test, feature = "model-tests"))]
 pub mod tokenization_test;
 #[cfg(test)]
 pub mod unified_error_test;

@@ -25,6 +25,10 @@ mkl = ["candle-core/mkl", "candle-nn/mkl", "candle-transformers/mkl"]
 # macOS Accelerate framework support for faster CPU inference
 # Enable with: cargo build --no-default-features --features accelerate
 accelerate = ["candle-core/accelerate", "candle-nn/accelerate", "candle-transformers/accelerate"]
+# Enables tests that load real model weights from ../models (config.json,
+# safetensors). Off by default so CI (which has no weights) skips them; run
+# locally with the weights present via: cargo test --features model-tests
+model-tests = []
 
 [dependencies]
 anyhow = { version = "1", features = ["backtrace"] }
