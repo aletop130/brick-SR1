@@ -64,13 +64,12 @@ Every request now routes to haiku / sonnet / opus by capability and complexity. 
 <details>
 <summary><b>Prefer a raw OpenAI-compatible gateway (no CLI)?</b></summary>
 
-Once the Docker image is published (see [Distribution channels](#-develop)), you'll
-be able to run the gateway directly:
+The image is published on Docker Hub (public, no login required). Run the gateway directly:
 
 ```bash
 docker run --rm -p 18000:18000 \
   -e REGOLO_API_KEY=$REGOLO_API_KEY \
-  docker.io/regolo/brick:latest      # published at the next v2.1.0 tag
+  docker.io/regolo/brick:latest      # or pin a version: docker.io/regolo/brick:2.1.1
 ```
 
 Then call it like any OpenAI endpoint, just set `"model": "brick"`:

@@ -16,14 +16,14 @@
   Docker Desktop integration is smoother that way).
 
 .PARAMETER Build
-  Build images locally instead of pulling from GHCR. Use this if you've cloned
+  Build images locally instead of pulling from Docker Hub. Use this if you've cloned
   the repo and want to test changes before they're published.
 
 .PARAMETER HostPort
   Port exposed on localhost for mymodel. Default 18000.
 
 .PARAMETER Tag
-  Image tag to pull from GHCR. Default `latest`. Use `dev` for unreleased
+  Image tag to pull from Docker Hub. Default `latest`. Use `dev` for unreleased
   builds pushed manually by maintainers.
 
 .EXAMPLE
@@ -126,7 +126,7 @@ try {
         Write-Host "Building images locally (this can take 10+ min the first time)..."
         docker compose -f $composeFile build
     } else {
-        Write-Host "Pulling images from GHCR..."
+        Write-Host "Pulling images from Docker Hub..."
         docker compose -f $composeFile pull
     }
     if ($LASTEXITCODE -ne 0) { Fail "Image acquisition failed." }

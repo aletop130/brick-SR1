@@ -46,15 +46,15 @@ error, fix that first (see Troubleshooting).
 ## Install
 
 ```powershell
-git clone https://github.com/regolo-ai/brick-cc.git
-cd brick-cc\deploy\installers\windows
+git clone https://github.com/regolo-ai/brick-SR1.git
+cd brick-SR1\deploy\installers\windows
 .\setup.ps1
 ```
 
 The script:
 1. Checks Docker / Compose / GPU passthrough.
 2. Generates a 64-char hex bearer token, writes `.env` (next to compose file).
-3. Pulls images from GHCR (`-Build` to build locally instead).
+3. Pulls images from Docker Hub (`-Build` to build locally instead).
 4. Brings up the stack with `docker compose up -d`.
 5. Waits up to 3 min for health.
 6. Sets `ANTHROPIC_BASE_URL=http://localhost:18000` as a User env var.
