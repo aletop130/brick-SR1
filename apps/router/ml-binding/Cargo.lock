@@ -94,7 +94,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56f9097edc7c89d03d526efbacf6d90914e3a8fa53bd56c2d1489e3a90819370"
 dependencies = [
  "approx",
- "ndarray",
+ "ndarray 0.15.6",
  "num-traits",
  "rand",
  "sprs",
@@ -109,7 +109,7 @@ checksum = "b31aeb1beadf239210aa6bc142d95aba626b729da707e2a38e7e953ad2775653"
 dependencies = [
  "kdtree",
  "linfa",
- "ndarray",
+ "ndarray 0.15.6",
  "ndarray-stats",
  "noisy_float",
  "num-traits",
@@ -139,7 +139,7 @@ version = "0.1.0"
 dependencies = [
  "libc",
  "linfa-nn",
- "ndarray",
+ "ndarray 0.17.2",
  "noisy_float",
  "serde",
  "serde_json",
@@ -160,6 +160,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "ndarray"
+version = "0.17.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "520080814a7a6b4a6e9070823bb24b4531daac8c4627e08ba5de8c5ef2f2752d"
+dependencies = [
+ "matrixmultiply",
+ "num-complex",
+ "num-integer",
+ "num-traits",
+ "portable-atomic",
+ "portable-atomic-util",
+ "rawpointer",
+]
+
+[[package]]
 name = "ndarray-stats"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -167,7 +182,7 @@ checksum = "af5a8477ac96877b5bd1fd67e0c28736c12943aba24eda92b127e036b0c8f400"
 dependencies = [
  "indexmap",
  "itertools",
- "ndarray",
+ "ndarray 0.15.6",
  "noisy_float",
  "num-integer",
  "num-traits",
@@ -215,6 +230,21 @@ name = "order-stat"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "efa535d5117d3661134dbf1719b6f0ffe06f2375843b13935db186cd094105eb"
+
+[[package]]
+name = "portable-atomic"
+version = "1.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
+
+[[package]]
+name = "portable-atomic-util"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2a106d1259c23fac8e543272398ae0e3c0b8d33c88ed73d0cc71b0f1d902618"
+dependencies = [
+ "portable-atomic",
+]
 
 [[package]]
 name = "ppv-lite86"
@@ -334,7 +364,7 @@ version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88bab60b0a18fb9b3e0c26e92796b3c3a278bf5fa4880f5ad5cc3bdfb843d0b1"
 dependencies = [
- "ndarray",
+ "ndarray 0.15.6",
  "num-complex",
  "num-traits",
  "smallvec",
