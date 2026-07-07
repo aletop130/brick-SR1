@@ -87,7 +87,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.10.0",
-    "@oclif/core": "^4.0.0",
+    "@oclif/core": "^4.11.14",
     "@oclif/plugin-warn-if-update-available": "^3.1.68",
     "chalk": "^5.3.0",
     "cli-table3": "^0.6.5",
