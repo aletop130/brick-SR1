@@ -1,6 +1,6 @@
 {
   "name": "@regolo-ai/brick",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Brick — CLI to host the Brick multimodal LLM routing gateway locally (companion to regolo-ai/brick-SR1)",
   "type": "module",
   "license": "Apache-2.0",
@@ -55,6 +55,9 @@
       "claude settings": {
         "description": "Configure Brick Claude: context-awareness and classifier compute"
       },
+      "claude stats": {
+        "description": "Routing observability: per-mode event aggregates and promotion-gate signals"
+      },
       "codex": {
         "description": "Inspect Brick ↔ OpenAI Codex wiring (status, routing stats)"
       },
@@ -64,6 +67,14 @@
     },
     "hooks": {
       "init": "./dist/hooks/init.js"
+    },
+    "plugins": [
+      "@oclif/plugin-warn-if-update-available"
+    ],
+    "warn-if-update-available": {
+      "timeoutInDays": 1,
+      "registry": "https://registry.npmjs.org",
+      "message": "A new version of @regolo-ai/brick is available. Run `brick update` to upgrade."
     }
   },
   "scripts": {
@@ -77,6 +88,7 @@
   "dependencies": {
     "@clack/prompts": "^0.10.0",
     "@oclif/core": "^4.0.0",
+    "@oclif/plugin-warn-if-update-available": "^3.0.0",
     "chalk": "^5.3.0",
     "cli-table3": "^0.6.5",
     "execa": "^9.0.0",

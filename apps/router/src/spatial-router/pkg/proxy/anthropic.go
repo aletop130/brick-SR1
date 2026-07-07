@@ -244,6 +244,48 @@ func (s *Server) handleBrickRouted(
 		}
 	}
 
+	// Cache-aware routing modes, layered on top of the calibrated router output
+	// (the scoring core is never touched). "sticky" applies hysteresis;
+	// "orchestrator" is a shadow-only path that logs intent without changing what
+	// is served. An empty stickyKey means no post-response bookkeeping runs.
+	//
+	// candidateModel is the router's raw pick, captured before any cache-aware
+	// post-processing can replace it, so the routing event log can record the
+	// candidate-vs-served divergence a sticky hold produces.
+	candidateModel := selectedModel
+	stickyKey := ""
+	switchDelta := 0.0
+	switch apCfg.EffectiveRoutingMode() {
+	case config.RoutingModeSticky:
+		if routedViaSkill && apCfg.ModelRoutingEnabled() && routeResult != nil {
+			stickyKey, selectedModel, under, switchDelta = s.applyStickyRouting(apCfg, body, routeResult, selectedModel, under)
+		}
+	case config.RoutingModeOrchestrator:
+		if routedViaSkill && routeResult != nil {
+			logShadowOrchestrator(len(body), routeResult, selectedModel)
+		}
+	}
+
+	// Routing event (shadow observability): assembled here, where the mode,
+	// candidate model, and conversation identity are known; the served model,
+	// context size, and end-to-end latency are filled in after the response
+	// streams. Written for every routed request regardless of mode so the
+	// promotion-gate aggregator has an off/sticky/orchestrator baseline. It
+	// never affects what is served.
+	var ev *routingEvent
+	if routedViaSkill && routeResult != nil {
+		mode := apCfg.EffectiveRoutingMode()
+		ev = &routingEvent{
+			Mode:           mode,
+			SessionKey:     anthropicSessionKey(body),
+			CandidateModel: candidateModel,
+			EstSwitchDelta: switchDelta,
+		}
+		if mode == config.RoutingModeOrchestrator {
+			ev.ShadowNote = "shadow_only_not_served_extractor_pending"
+		}
+	}
+
 	metrics.BrickCCRequests.WithLabelValues(label, selectedModel).Inc()
 
 	// Strip the 1M-context beta when the account lacks the extra-usage tier, OR
@@ -277,7 +319,7 @@ func (s *Server) handleBrickRouted(
 	logging.Infof("AnthropicPassthrough[brick]: mode_effort=%s preference=%.2f complexity=%s tau=%.3f under=%.3f auto_effort=%s model=%s use_1m=%t bytes=%d",
 		clientEffort, preference, label, tauQuery, under, effortStr, selectedModel, use1M, len(rewritten))
 
-	s.forwardAnthropicRequest(w, r, apCfg, rewritten, selectedModel, label, effortStr, routedViaSkill, stripBeta)
+	s.forwardAnthropicRequest(w, r, apCfg, rewritten, selectedModel, label, effortStr, routedViaSkill, stripBeta, stickyKey, ev)
 }
 
 // underCapacityForModel returns the under-capacity residual of the named model
@@ -320,7 +362,7 @@ func (s *Server) handleNativeModel(
 	logging.Infof("AnthropicPassthrough[native]: model=%s use_1m=%t upstream=%s bytes=%d",
 		requestedModel, use1M, apCfg.EffectiveUpstreamURL(), len(rewritten))
 
-	s.forwardAnthropicRequest(w, r, apCfg, rewritten, requestedModel, "native", "", false, stripBeta)
+	s.forwardAnthropicRequest(w, r, apCfg, rewritten, requestedModel, "native", "", false, stripBeta, "", nil)
 }
 
 // forwardAnthropicRequest sends the (possibly rewritten) body to the Anthropic
@@ -334,7 +376,13 @@ func (s *Server) forwardAnthropicRequest(
 	selectedModel, label, effortStr string,
 	routedViaSkill bool,
 	stripBeta bool,
+	stickyKey string,
+	ev *routingEvent,
 ) {
+	// start bounds Brick's end-to-end view of this request: upstream request
+	// build, round-trip, and full response stream. Recorded into ev after the
+	// stream completes; used only for observability, never for serving.
+	start := time.Now()
 	upstreamURL := apCfg.EffectiveUpstreamURL() + "/v1/messages"
 	upstreamReq, err := http.NewRequestWithContext(r.Context(), http.MethodPost, upstreamURL, bytes.NewReader(body))
 	if err != nil {
@@ -439,6 +487,27 @@ func (s *Server) forwardAnthropicRequest(
 		}
 	}
 	s.recordEconomicsUsage(selectedModel, usage.InputTokens, usage.CacheCreationInputTokens, usage.CacheReadInputTokens, usage.OutputTokens)
+
+	// Sticky routing bookkeeping: record the model actually served for this
+	// conversation, keyed by response-arrival time so out-of-order concurrent
+	// turns cannot overwrite fresher state (see pkg/sticky). The recorded
+	// context size is the full prefix the next switch would have to reprocess:
+	// fresh input + both cache tiers.
+	if stickyKey != "" && s.stickyStore != nil {
+		ctxTokens := usage.InputTokens + usage.CacheReadInputTokens + usage.CacheCreationInputTokens
+		s.stickyStore.Record(stickyKey, selectedModel, ctxTokens, time.Now())
+	}
+
+	// Routing event: fill the post-response fields and append. Off the client's
+	// critical path (the full response has already been streamed above). append
+	// is a no-op when ev is nil (native path) or the log is disabled.
+	if ev != nil {
+		ev.ServedModel = selectedModel
+		ev.CtxTokens = usage.InputTokens + usage.CacheReadInputTokens + usage.CacheCreationInputTokens
+		ev.E2ELatencyMs = time.Since(start).Milliseconds()
+		ev.TS = time.Now().UTC().Format(time.RFC3339Nano)
+		s.routingEventLog.append(*ev)
+	}
 }
 
 // accumulateAnthropicSSEUsage feeds a raw chunk of an Anthropic SSE stream
@@ -655,7 +724,35 @@ func extractAnthropicPromptText(body []byte) string {
 	return strings.TrimSpace(strings.Join(parts, "\n"))
 }
 
-// maxContextClassifyChars bounds the size of the context-aware classification
+// extractAnthropicIdentityParts returns the two prompt components used to derive
+// a stable conversation key for sticky routing: the system prompt and the text
+// of the FIRST user turn. Both stay constant across turns of one conversation
+// (unlike the last user turn), so their hash identifies the conversation.
+// Empty when the body is unparseable or carries neither.
+func extractAnthropicIdentityParts(body []byte) (system, firstUser string) {
+	var raw struct {
+		System   json.RawMessage `json:"system"`
+		Messages []struct {
+			Role    string          `json:"role"`
+			Content json.RawMessage `json:"content"`
+		} `json:"messages"`
+	}
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return "", ""
+	}
+	system = decodeAnthropicContent(raw.System)
+	for i := range raw.Messages {
+		if raw.Messages[i].Role != "user" {
+			continue
+		}
+		if txt := decodeAnthropicContent(raw.Messages[i].Content); txt != "" {
+			firstUser = txt
+			break
+		}
+	}
+	return system, firstUser
+}
+
 // input so the small complexity classifier stays fast. Validated empirically:
 // a 16000-char trailing window adds roughly 47ms median classifier latency.
 const maxContextClassifyChars = 16000

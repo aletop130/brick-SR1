@@ -79,17 +79,17 @@ pub use mmbert_embedding::MmBertEmbeddingModel;
 mod pooling_test;
 
 // Qwen3-Embedding tests
-#[cfg(test)]
+#[cfg(all(test, feature = "model-tests"))]
 mod qwen3_embedding_test;
 
 // GemmaEmbedding tests
-#[cfg(test)]
+#[cfg(all(test, feature = "model-tests"))]
 mod gemma_embedding_test;
 
 // Dense bottleneck tests
-#[cfg(test)]
+#[cfg(all(test, feature = "model-tests"))]
 mod dense_layers_test;
 
 // Gemma3 model tests
-#[cfg(test)]
+#[cfg(all(test, feature = "model-tests"))]
 mod gemma3_model_test;

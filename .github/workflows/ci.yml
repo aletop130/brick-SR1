@@ -37,15 +37,15 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Build Rust bindings (shared libs needed by CGO link)
         run: |
-          cd apps/router/candle-binding && cargo build --release --no-default-features
+          cd candle-binding && cargo build --release --no-default-features
           cd ../ml-binding              && cargo build --release
           cd ../nlp-binding             && cargo build --release
+          cd ..
           mkdir -p /tmp/libs
-          cp candle-binding/target/release/libcandle_spatial_router.so /tmp/libs/ || true
-          cp ml-binding/target/release/libml_spatial_router.so         /tmp/libs/ || true
-          cp nlp-binding/target/release/libnlp_binding.so               /tmp/libs/ || true
+          cp candle-binding/target/release/libcandle_spatial_router.so /tmp/libs/
+          cp ml-binding/target/release/libml_spatial_router.so         /tmp/libs/
+          cp nlp-binding/target/release/libnlp_binding.so               /tmp/libs/
         working-directory: apps/router
-        continue-on-error: true
       - name: go vet
         working-directory: apps/router/src/spatial-router
         run: go vet ./...
@@ -100,17 +100,13 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: apps/cli/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: npm ci
-        working-directory: apps/cli
         run: npm ci
       - name: npm run build
-        working-directory: apps/cli
-        run: npm run build
+        run: npm run build -w apps/cli
       - name: npm run lint
-        working-directory: apps/cli
-        run: npm run lint
+        run: npm run lint -w apps/cli
       - name: npm test
-        working-directory: apps/cli
-        run: npm test
+        run: npm test -w apps/cli
         continue-on-error: true   # vitest harness may need TTY for some tests; smoke covered by build+lint

@@ -46,6 +46,9 @@ export const REGOLO_API_KEY_HELP =
 
 export type ComputeMode = 'local' | 'api';
 
+/** Cache-aware routing mode. Mirrors the Go AnthropicPassthroughConfig.RoutingMode. */
+export type RoutingMode = 'off' | 'sticky' | 'orchestrator';
+
 export interface SettingsApplyResult {
   configPath: string;
   changed: boolean;
@@ -128,6 +131,37 @@ export async function applySubagentRouting(
   const changed = obj.anthropic_passthrough.route_subagents !== enabled;
   if (changed) {
     obj.anthropic_passthrough.route_subagents = enabled;
+  }
+  return saveAndRestart(obj, profile, changed);
+}
+
+/**
+ * Select the cache-aware routing mode: writes anthropic_passthrough.routing_mode.
+ * 'off' (default) keeps the historic per-request routing with no cross-turn
+ * memory; 'sticky' enables cache-aware hysteresis; 'orchestrator' is the
+ * shadow-mode v2 path. 'off' is stored by removing the key so the YAML stays
+ * clean and the Go EffectiveRoutingMode() default applies. No-op when unchanged.
+ * Requires an anthropic_passthrough block (created by `brick claude on`).
+ */
+export async function applyRoutingMode(
+  profile: string,
+  mode: RoutingMode
+): Promise<SettingsApplyResult> {
+  const obj = loadObj(await loadConfigText(profile), profile);
+  if (!obj.anthropic_passthrough || typeof obj.anthropic_passthrough !== 'object') {
+    throw new SettingsError(
+      `profile '${profile}' has no anthropic_passthrough block; run \`brick claude on\` first`
+    );
+  }
+  const cur: RoutingMode =
+    obj.anthropic_passthrough.routing_mode === 'sticky' ||
+    obj.anthropic_passthrough.routing_mode === 'orchestrator'
+      ? obj.anthropic_passthrough.routing_mode
+      : 'off';
+  const changed = cur !== mode;
+  if (changed) {
+    if (mode === 'off') delete obj.anthropic_passthrough.routing_mode;
+    else obj.anthropic_passthrough.routing_mode = mode;
   }
   return saveAndRestart(obj, profile, changed);
 }

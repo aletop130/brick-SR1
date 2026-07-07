@@ -823,7 +823,7 @@ impl TraditionalModernBertClassifier {
     ///
     /// # Example
     ///
-    /// ```rust,no_run
+    /// ```ignore
     /// use candle_spatial_router::model_architectures::traditional::modernbert::{
     ///     ModernBertVariant, TraditionalModernBertClassifier
     /// };

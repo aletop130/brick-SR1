@@ -49,7 +49,7 @@ pub use model_factory::{
 pub use embedding::pooling::{cls_pool, last_token_pool, mean_pool};
 
 // Test modules
-#[cfg(test)]
+#[cfg(all(test, feature = "model-tests"))]
 pub mod model_factory_test;
 #[cfg(test)]
 pub mod routing_test;

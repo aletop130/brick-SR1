@@ -1,9 +1,11 @@
 # Brick complexity classifier — GPU variant.
-# Built with CUDA 12.1 runtime to match the cu121 torch wheels in
-# requirements-gpu.txt. Compatible with NVIDIA Container Toolkit on Linux,
-# Docker Desktop WSL2 backend on Windows 11, and SkyPilot/Seeweb GPU clusters.
+# Built with CUDA 12.4 runtime to match the cu124 torch wheels in
+# requirements-gpu.txt (torch >= 2.6.0 fixes CVE-2025-32434; no cu121 wheel
+# exists for 2.6.0). Requires host NVIDIA driver >= 550. Compatible with NVIDIA
+# Container Toolkit on Linux, Docker Desktop WSL2 backend on Windows 11, and
+# SkyPilot/Seeweb GPU clusters.
 
-FROM nvidia/cuda:12.1.1-runtime-ubuntu22.04
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 \

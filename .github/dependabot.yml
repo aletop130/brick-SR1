@@ -1,0 +1,51 @@
+version: 2
+updates:
+  # GitHub Actions used by the CI/CD workflows
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "ci"]
+
+  # npm: root workspace + CLI package
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "npm"]
+  - package-ecosystem: npm
+    directory: "/apps/cli"
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "npm"]
+
+  # Go module: router
+  - package-ecosystem: gomod
+    directory: "/apps/router/src/spatial-router"
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "go"]
+
+  # Rust crates: candle / ml / nlp bindings
+  - package-ecosystem: cargo
+    directory: "/apps/router/candle-binding"
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "rust"]
+  - package-ecosystem: cargo
+    directory: "/apps/router/ml-binding"
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "rust"]
+  - package-ecosystem: cargo
+    directory: "/apps/router/nlp-binding"
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "rust"]
+
+  # Python: complexity classifier server
+  - package-ecosystem: pip
+    directory: "/deploy/addons/brick-complexity-server"
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "python"]

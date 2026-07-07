@@ -27,6 +27,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      security-events: write
 
     steps:
       - name: Check out the repo
@@ -53,18 +54,56 @@ jobs:
             type=ref,event=branch
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push
-        uses: docker/build-push-action@v5
+      - name: Build image (load locally for scan)
+        uses: docker/build-push-action@v6
         with:
           context: ./deploy/addons/brick-complexity-server
           file: ./deploy/addons/brick-complexity-server/Dockerfile
           platforms: linux/amd64
-          push: ${{ github.event_name != 'pull_request' }}
-          load: ${{ github.event_name == 'pull_request' }}
+          load: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=brick-complexity
           cache-to: type=gha,mode=max,scope=brick-complexity
+
+      - name: Trivy scan (gate on fixable CRITICAL, table for log visibility)
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          version: v0.72.0
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          format: table
+          severity: CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+          timeout: 15m
+
+      - name: Trivy SARIF (report, non-blocking)
+        if: always()
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          version: v0.72.0
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          format: sarif
+          output: trivy-complexity.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          timeout: 15m
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-complexity.sarif
+          category: brick-complexity-server
+
+      - name: Push image
+        if: github.event_name != 'pull_request'
+        run: |
+          for tag in ${{ steps.meta.outputs.tags }}; do
+            echo "Pushing $tag"
+            docker push "$tag"
+          done
 
       - name: Build summary
         if: always()

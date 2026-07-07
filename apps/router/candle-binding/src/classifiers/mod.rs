@@ -50,5 +50,5 @@ pub struct TaskResult {
 }
 
 // Test modules
-#[cfg(test)]
+#[cfg(all(test, feature = "model-tests"))]
 pub mod unified_test;

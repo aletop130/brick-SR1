@@ -338,7 +338,7 @@ function buildSkillRouter(
     capabilities: CAPABILITIES,
     capability_model: {
       model_id: 'models/modernbert-capability-classifier',
-      repo_id: 'massaindustries/modernbert-capability-classifier',
+      repo_id: 'regolo/modernbert-capability-classifier',
       labels: CAPABILITIES,
       use_cpu: true,
     },

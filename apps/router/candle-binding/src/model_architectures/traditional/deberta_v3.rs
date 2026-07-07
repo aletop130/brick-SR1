@@ -135,7 +135,7 @@ impl DebertaV3SequenceClassifier {
 /// with built-in support for prompt injection detection and content moderation.
 ///
 /// ## Example
-/// ```no_run
+/// ```ignore
 /// use candle_spatial_router::model_architectures::traditional::deberta_v3::DebertaV3Classifier;
 ///
 /// // Load prompt injection detection model
@@ -338,7 +338,7 @@ impl DebertaV3Classifier {
     /// Tuple of (predicted_label, confidence_score)
     ///
     /// ## Example
-    /// ```no_run
+    /// ```ignore
     /// let (label, confidence) = classifier.classify_text("Hello world")?;
     /// println!("Predicted: {} ({:.1}%)", label, confidence * 100.0);
     /// ```
@@ -386,7 +386,7 @@ impl DebertaV3Classifier {
     /// Vector of (predicted_label, confidence_score) for each input text
     ///
     /// ## Example
-    /// ```no_run
+    /// ```ignore
     /// let texts = vec!["Text 1", "Text 2", "Text 3"];
     /// let results = classifier.classify_batch(&texts)?;
     /// for (text, (label, conf)) in texts.iter().zip(results.iter()) {

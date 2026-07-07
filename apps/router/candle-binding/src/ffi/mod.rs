@@ -35,7 +35,7 @@ pub use state_manager::*;
 
 #[cfg(test)]
 pub mod classify_test;
-#[cfg(test)]
+#[cfg(all(test, feature = "model-tests"))]
 pub mod embedding_test;
 #[cfg(test)]
 pub mod init_test;

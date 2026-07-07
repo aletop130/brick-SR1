@@ -3,7 +3,7 @@
 services:
 {{#if useLocalClassifier}}
   classifier:
-    image: ghcr.io/massaindustries/brick-cc-classifier:${BRICK_CC_TAG:-latest}
+    image: ghcr.io/regolo-ai/brick-cc-classifier:${BRICK_CC_TAG:-latest}
     container_name: {{projectName}}-classifier
     # Image entrypoint is `python3 server.py --port 8094 --device cuda`; appending
     # `--device auto` overrides it (argparse keeps the last value) so the default
@@ -25,7 +25,7 @@ services:
 
 {{/if}}
   router:
-    image: ghcr.io/massaindustries/brick-cc-mymodel:${BRICK_CC_TAG:-latest}
+    image: ghcr.io/regolo-ai/brick-cc-router:${BRICK_CC_TAG:-latest}
     container_name: {{projectName}}-router
 {{#if useLocalClassifier}}
     depends_on:

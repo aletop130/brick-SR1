@@ -74,7 +74,36 @@ type AnthropicPassthroughConfig struct {
 	// user message, so routing reflects accumulated context rather than a
 	// single short follow-up. Default disabled (opt-in). See pkg/proxy/anthropic.go.
 	ContextWindow ContextWindowConfig `yaml:"context_window,omitempty"`
+
+	// RoutingMode selects the cache-aware routing strategy layered on top of
+	// model selection. "" / "off" (default) is the historic behavior: the skill
+	// router picks the model per request with no cross-turn memory. "sticky"
+	// enables cache-aware hysteresis — stay on the conversation's previous model
+	// unless switching is worth the prompt-cache invalidation cost. "orchestrator"
+	// is the shadow-mode v2 path (computed, not served). See EffectiveRoutingMode
+	// and pkg/proxy/anthropic.go.
+	RoutingMode string `yaml:"routing_mode,omitempty"`
+
+	// StickyTTLSeconds is the lifetime of a conversation's sticky routing entry.
+	// Defaults to 360 (6 min) when zero — just over the 5-minute Anthropic prompt
+	// cache TTL, so an expired entry always corresponds to a cold cache (switching
+	// is then free and routing is unconstrained). Configurable because some tiers
+	// use a 1h cache TTL. See EffectiveStickyTTLSeconds.
+	StickyTTLSeconds int `yaml:"sticky_ttl_seconds,omitempty"`
+
+	// StickyScoreMargin is how much better (lower) a candidate model's routing
+	// score must be than the conversation's current model before Brick pays the
+	// prompt-cache invalidation cost to switch. Defaults to 0.15 when zero. See
+	// EffectiveStickyScoreMargin.
+	StickyScoreMargin float64 `yaml:"sticky_score_margin,omitempty"`
 }
+
+// Routing mode identifiers for AnthropicPassthroughConfig.RoutingMode.
+const (
+	RoutingModeOff          = "off"
+	RoutingModeSticky       = "sticky"
+	RoutingModeOrchestrator = "orchestrator"
+)
 
 // ContextWindowConfig controls the context-aware classification input.
 type ContextWindowConfig struct {
@@ -148,6 +177,36 @@ func (c *AnthropicPassthroughConfig) EffectiveFixedModel() string {
 		return c.FixedModel
 	}
 	return "claude-sonnet-4-6"
+}
+
+// EffectiveRoutingMode returns a validated routing mode, defaulting to
+// RoutingModeOff for an absent or unrecognized value so the historic per-request
+// routing (no cross-turn memory) is always the safe fallback.
+func (c *AnthropicPassthroughConfig) EffectiveRoutingMode() string {
+	switch c.RoutingMode {
+	case RoutingModeSticky, RoutingModeOrchestrator:
+		return c.RoutingMode
+	default:
+		return RoutingModeOff
+	}
+}
+
+// EffectiveStickyTTLSeconds returns the configured sticky-entry TTL or the
+// default of 360 seconds (6 minutes).
+func (c *AnthropicPassthroughConfig) EffectiveStickyTTLSeconds() int {
+	if c.StickyTTLSeconds > 0 {
+		return c.StickyTTLSeconds
+	}
+	return 360
+}
+
+// EffectiveStickyScoreMargin returns the configured switch margin or the
+// default of 0.15.
+func (c *AnthropicPassthroughConfig) EffectiveStickyScoreMargin() float64 {
+	if c.StickyScoreMargin > 0 {
+		return c.StickyScoreMargin
+	}
+	return 0.15
 }
 
 func resolveFromMap(label string, m AnthropicPassthroughModelMap, easyDefault, mediumDefault, hardDefault string) string {
