@@ -72,7 +72,7 @@ jobs:
       # --- Build locally, scan, then push (Trivy gate before publish) ---
 
       - name: Build image (load locally for scan)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./apps/router/Dockerfile
