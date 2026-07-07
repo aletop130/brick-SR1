@@ -1,11 +1,11 @@
 name: Publish brick-cc images
 
 # Builds the two images consumed by deploy/installers/windows/setup.ps1
-# and publishes them to GHCR. Triggered on:
+# and publishes them to Docker Hub. Triggered on:
 #   - git tag v*    → tags `:latest` and `:<version>`
 #   - manual dispatch with `tag` input
 #
-# The images are amd64-only on purpose: the classifier needs cu121 wheels and
+# The images are amd64-only on purpose: the classifier needs cu124 wheels and
 # the Windows installer targets amd64 hosts. Add arm64 only when there is a
 # reproducible torch wheel story for it.
 
@@ -22,7 +22,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
   security-events: write
 
 jobs:
@@ -45,18 +44,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Resolve tags
         id: tags
         run: |
-          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE="ghcr.io/${OWNER_LC}/${{ matrix.image }}"
+          IMAGE="docker.io/regolo/${{ matrix.image }}"
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             VER="${GITHUB_REF_NAME#v}"
             echo "tags=${IMAGE}:latest,${IMAGE}:${VER}" >> "$GITHUB_OUTPUT"

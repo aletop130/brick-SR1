@@ -70,7 +70,7 @@ be able to run the gateway directly:
 ```bash
 docker run --rm -p 18000:18000 \
   -e REGOLO_API_KEY=$REGOLO_API_KEY \
-  ghcr.io/regolo-ai/brick:latest      # published at the next v2.1.0 tag
+  docker.io/regolo/brick:latest      # published at the next v2.1.0 tag
 ```
 
 Then call it like any OpenAI endpoint, just set `"model": "brick"`:
@@ -339,9 +339,8 @@ Per-component docs: [router](apps/router/README.md) · [CLI](apps/cli/README.md)
 | Channel | Status |
 |---|---|
 | Source clone + `npm link` | available |
-| Docker GHCR (`ghcr.io/regolo-ai/brick`) | pending first push (tag `v2.1.0`) |
+| Docker Hub (`docker.io/regolo/brick`) | available (tag `v2.1.1`) |
 | npm (`@regolo-ai/brick`) | pending `NPM_TOKEN` secret |
-| Docker Hub mirror (`docker.io/regolo/brick`) | pending Docker Hub secrets |
 
 </details>
 

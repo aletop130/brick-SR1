@@ -12,7 +12,7 @@ Goal: pull the published image, run it, and confirm the OpenAI-compatible API wo
 ```bash
 docker run --rm -p 18000:18000 \
   -e REGOLO_API_KEY=$REGOLO_API_KEY \
-  ghcr.io/regolo-ai/brick:latest
+  docker.io/regolo/brick:latest
 ```
 
 The container starts the Brick HTTP proxy on port 18000 (host).
@@ -59,7 +59,7 @@ The image bakes in `apps/router/config/config.yaml` as default. To use a custom 
 docker run --rm -p 18000:18000 \
   -v $(pwd)/config.yaml:/app/config/config.yaml:ro \
   -e REGOLO_API_KEY=$REGOLO_API_KEY \
-  ghcr.io/regolo-ai/brick:latest
+  docker.io/regolo/brick:latest
 ```
 
 See [`config.yaml`](../../config.yaml) for the default and [`apps/router/README.md`](../../apps/router/README.md) for every config knob.

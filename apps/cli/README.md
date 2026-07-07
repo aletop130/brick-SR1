@@ -78,7 +78,7 @@ Common flags: `--profile <name>`, `--thinking off\|low\|med\|high\|auto`, `--jso
 Environment overrides:
 - `BRICK_HOME`: alternate root (default `~/.brick`).
 - `BRICK_PROFILE`: alternate active profile (default = `state.json`'s `activeProfile`).
-- `BRICK_IMAGE`: alternate Docker image for `brick serve` (default `ghcr.io/regolo-ai/brick:latest`).
+- `BRICK_IMAGE`: alternate Docker image for `brick serve` (default `docker.io/regolo/brick:latest`).
 - `BRICK_CC_TAG`: alternate image tag for the Claude/Codex router + classifier sidecar containers.
 - `REGOLO_API_KEY`: provider key (read by the router via `Authorization: Bearer ...`).
 - `ANTHROPIC_BASE_URL`, `ANTHROPIC_API_KEY`: used by Claude Code passthrough.

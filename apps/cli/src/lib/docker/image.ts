@@ -1,6 +1,6 @@
 import { dockerCmd } from './run.js';
 
-const DEFAULT_IMAGE = process.env.BRICK_IMAGE ?? 'ghcr.io/regolo-ai/brick:latest';
+const DEFAULT_IMAGE = process.env.BRICK_IMAGE ?? 'docker.io/regolo/brick:latest';
 
 export async function imageExists(image = DEFAULT_IMAGE): Promise<boolean> {
   const r = await dockerCmd(['image', 'inspect', image]);

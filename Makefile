@@ -14,7 +14,7 @@ help:
 	@echo "  test-router     go test in apps/router/src/spatial-router"
 	@echo "  test-python     pytest in packages/evals/tests"
 	@echo "  lint            pre-commit run --all-files"
-	@echo "  docker-build    docker build router → ghcr.io/regolo-ai/brick:dev"
+	@echo "  docker-build    docker build router → docker.io/regolo/brick:dev"
 	@echo "  clean           remove node_modules, dist, .venv, __pycache__"
 	@echo "  release-tag VER=2.0.0  create + push annotated tag"
 
@@ -45,7 +45,7 @@ lint:
 	pre-commit run --all-files
 
 docker-build:
-	docker build -f apps/router/Dockerfile -t ghcr.io/regolo-ai/brick:dev .
+	docker build -f apps/router/Dockerfile -t docker.io/regolo/brick:dev .
 
 clean:
 	find . -type d -name 'node_modules' -prune -exec rm -rf {} +

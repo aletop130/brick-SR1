@@ -83,8 +83,8 @@ export default class Update extends Command {
   /** Print a profile's image refs and warn if any still targets the legacy org. */
   private printImages(profile: string, imgs: string[]): void {
     print(`profile ${profile}: ${imgs.join(', ') || '(no images resolved)'}`);
-    if (imgs.some((i) => i.includes('ghcr.io/massaindustries'))) {
-      warn(`[${profile}] compose still targets the legacy ghcr.io/massaindustries image; regenerate with \`brick claude on\` / \`brick codex on\` to switch to ghcr.io/regolo-ai.`);
+    if (imgs.some((i) => i.includes('ghcr.io/massaindustries') || i.includes('ghcr.io/regolo-ai'))) {
+      warn(`[${profile}] compose still targets a legacy ghcr.io image; regenerate with \`brick claude on\` / \`brick codex on\` to switch to docker.io/regolo.`);
     }
   }
 

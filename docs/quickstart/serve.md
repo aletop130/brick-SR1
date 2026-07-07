@@ -57,7 +57,7 @@ Result on disk:
 brick serve
 ```
 
-This pulls `ghcr.io/regolo-ai/brick:latest` if missing, then runs `docker compose up -d`. The CLI waits up to 90s for `GET /health` on `localhost:18000` (default port from your profile).
+This pulls `docker.io/regolo/brick:latest` if missing, then runs `docker compose up -d`. The CLI waits up to 90s for `GET /health` on `localhost:18000` (default port from your profile).
 
 Check state:
 
@@ -113,7 +113,7 @@ brick down                    # docker compose down (container removed)
 Set `BRICK_IMAGE` env var to override the default:
 
 ```bash
-export BRICK_IMAGE=ghcr.io/regolo-ai/brick:2.0.0
+export BRICK_IMAGE=docker.io/regolo/brick:2.1.1
 brick serve
 ```
 

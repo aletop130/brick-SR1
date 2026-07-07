@@ -1,4 +1,4 @@
-name: Docker Build & Push (GHCR + Docker Hub)
+name: Docker Build & Push (Docker Hub)
 
 on:
   push:
@@ -21,7 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write    # push to GHCR via GITHUB_TOKEN
       security-events: write   # upload Trivy SARIF to the Security tab
     steps:
       - uses: actions/checkout@v4
@@ -34,31 +33,20 @@ jobs:
 
       # --- Registry auth ---
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Log in to Docker Hub
-        if: ${{ env.DOCKERHUB_USERNAME != '' }}
         uses: docker/login-action@v3
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # --- Compute tags (multi-registry) ---
+      # --- Compute tags ---
 
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/regolo-ai/brick
-            ${{ secrets.DOCKERHUB_USERNAME && 'docker.io/regolo/brick' || '' }}
+            docker.io/regolo/brick
           tags: |
             type=ref,event=branch
             type=ref,event=pr
