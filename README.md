@@ -12,6 +12,7 @@ open- and closed-weight LLMs, matching the strongest single model's quality at a
 fraction of its cost. No cascades. No wasted calls. Drop-in `model: "brick"`.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/regolo-ai/brick-SR1/ci.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=CI)](https://github.com/regolo-ai/brick-SR1/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/regolo-ai/brick-SR1?style=flat-square&logo=github&label=release)](https://github.com/regolo-ai/brick-SR1/releases/latest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)](LICENSE)
 [![Last commit](https://img.shields.io/github/last-commit/regolo-ai/brick-SR1?style=flat-square&logo=git&logoColor=white)](https://github.com/regolo-ai/brick-SR1/commits)
 [![Stars](https://img.shields.io/github/stars/regolo-ai/brick-SR1?style=flat-square&logo=github)](https://github.com/regolo-ai/brick-SR1/stargazers)
@@ -69,7 +70,7 @@ The image is published on Docker Hub (public, no login required). Run the gatewa
 ```bash
 docker run --rm -p 18000:18000 \
   -e REGOLO_API_KEY=$REGOLO_API_KEY \
-  docker.io/regolo/brick:latest      # or pin a version: docker.io/regolo/brick:2.1.1
+  docker.io/regolo/brick:latest      # or pin a version: docker.io/regolo/brick:2.1.2
 ```
 
 Then call it like any OpenAI endpoint, just set `"model": "brick"`:
@@ -155,6 +156,10 @@ Once you have picked the tier, how hard to think is decided **autonomously per r
 ### Native models bypass the router
 
 Selecting **opus**, **sonnet**, or **haiku** explicitly in the picker skips Brick entirely: the request is forwarded verbatim to that exact model, with no skill routing and no effort override. Only **brick-claude** runs the router.
+
+### Cache-aware (sticky) routing
+
+Switching models mid-conversation invalidates the prompt cache: each provider's KV cache is per-model and opaque, so the new model has to reprocess the whole context at full input price. Brick's **sticky routing** keeps a conversation on its current model unless switching is actually worth it: downswitching to a cheaper model is always free, upswitching only happens when the estimated quality gain clears the cost of re-priming the cache. Enable it with `routing_mode: sticky` ([`brick claude settings mode`](#the-5-modes-pick-your-costquality-trade-off)).
 
 ### Observability
 
@@ -338,7 +343,7 @@ Per-component docs: [router](apps/router/README.md) · [CLI](apps/cli/README.md)
 | Channel | Status |
 |---|---|
 | Source clone + `npm link` | available |
-| Docker Hub (`docker.io/regolo/brick`) | available (tag `v2.1.1`) |
+| Docker Hub (`docker.io/regolo/brick`) | available (tag `v2.1.2`) |
 | npm (`@regolo-ai/brick`) | pending `NPM_TOKEN` secret |
 
 </details>
