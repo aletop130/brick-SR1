@@ -157,6 +157,10 @@ Once you have picked the tier, how hard to think is decided **autonomously per r
 
 Selecting **opus**, **sonnet**, or **haiku** explicitly in the picker skips Brick entirely: the request is forwarded verbatim to that exact model, with no skill routing and no effort override. Only **brick-claude** runs the router.
 
+### Cache-aware (sticky) routing
+
+Switching models mid-conversation invalidates the prompt cache: each provider's KV cache is per-model and opaque, so the new model has to reprocess the whole context at full input price. Brick's **sticky routing** keeps a conversation on its current model unless switching is actually worth it: downswitching to a cheaper model is always free, upswitching only happens when the estimated quality gain clears the cost of re-priming the cache. Enable it with `routing_mode: sticky` ([`brick claude settings mode`](#the-5-modes-pick-your-costquality-trade-off)).
+
 ### Observability
 
 ```bash
