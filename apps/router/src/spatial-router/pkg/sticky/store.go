@@ -75,6 +75,26 @@ func (s *Store) Record(key, model string, contextTokens int64, arrivedAt time.Ti
 	s.m[key] = Entry{LastModel: model, LastSeen: arrivedAt, LastContextTokens: contextTokens}
 }
 
+// Prune removes every entry already expired at now, returning the count
+// removed. The predicate is byte-identical to GetAt's lazy-eviction check
+// (now.Sub(e.LastSeen) > s.ttl), so Prune only deletes entries that any
+// subsequent read would already treat as absent (the no-prev / cold path,
+// identical to expired). It exists to bound memory: lazy eviction never fires
+// for keys that are never re-read (one-shot conversations such as routed
+// subagents), so without a periodic sweep the map grows monotonically. It
+// never changes a routing decision.
+func (s *Store) Prune(now time.Time) (removed int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for k, e := range s.m {
+		if now.Sub(e.LastSeen) > s.ttl {
+			delete(s.m, k)
+			removed++
+		}
+	}
+	return removed
+}
+
 // Len returns the number of live entries (after any lazy eviction performed by
 // prior GetAt calls). Intended for tests and diagnostics.
 func (s *Store) Len() int {

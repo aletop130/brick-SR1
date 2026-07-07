@@ -44,7 +44,7 @@ The router (or any of the 3 backend models directly) needs to produce a response
 ```bash
 # Inference via Brick router (recommended for the paper's exact metric):
 docker run -d --name brick -p 18000:18000 -e REGOLO_API_KEY=$REGOLO_API_KEY \
-  ghcr.io/regolo-ai/brick:latest
+  docker.io/regolo/brick:latest
 
 uv run python packages/evals/scripts/100_run_inference.py \
   --dataset ./data/dataset_a \

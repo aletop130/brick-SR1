@@ -16,8 +16,8 @@
 #   BRICK_CC_HOST_PORT      Brick router port on host, default 18000
 
 x-images:
-  classifier-image: &classifier-image ghcr.io/regolo-ai/brick-cc-classifier:${BRICK_CC_TAG:-latest}
-  router-image:     &router-image     ghcr.io/regolo-ai/brick-cc-router:${BRICK_CC_TAG:-latest}
+  classifier-image: &classifier-image docker.io/regolo/brick-cc-classifier:${BRICK_CC_TAG:-latest}
+  router-image:     &router-image     docker.io/regolo/brick-cc-router:${BRICK_CC_TAG:-latest}
 
 services:
   classifier:

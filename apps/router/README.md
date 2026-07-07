@@ -74,13 +74,13 @@ cd apps/router/nlp-binding    && cargo build --release
 ```bash
 # Via Docker (default config)
 docker run --rm -p 18000:18000 -e REGOLO_API_KEY=$REGOLO_API_KEY \
-  ghcr.io/regolo-ai/brick:latest
+  docker.io/regolo/brick:latest
 
 # Via Docker with custom config
 docker run --rm -p 18000:18000 \
   -v $(pwd)/config.yaml:/app/config/config.yaml:ro \
   -e REGOLO_API_KEY=$REGOLO_API_KEY \
-  ghcr.io/regolo-ai/brick:latest
+  docker.io/regolo/brick:latest
 
 # Or via the CLI (preferred for self-hosting)
 brick init && brick serve

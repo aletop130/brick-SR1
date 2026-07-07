@@ -68,6 +68,14 @@ type Server struct {
 // graceful shutdown.
 const economicsSnapshotInterval = 30 * time.Second
 
+// stickyPruneInterval is how often expired sticky-store entries are swept.
+// Lazy eviction on GetAt never fires for keys that are never re-read (e.g.
+// one-shot routed subagents), so a periodic prune bounds memory. Cadence is a
+// pure memory/CPU tradeoff, never correctness: Prune uses the same TTL
+// predicate as GetAt, so a swept entry is one a read would already treat as
+// absent.
+const stickyPruneInterval = 60 * time.Second
+
 // NewServer creates a new Brick proxy server. If a prior economics snapshot
 // exists on disk (economics_snapshot.json next to configPath), it is loaded
 // so token-usage counters survive a restart instead of resetting to zero; a
@@ -174,6 +182,27 @@ func (s *Server) Start(ctx context.Context) error {
 				return
 			case <-snapshotTicker.C:
 				s.saveEconomicsSnapshot()
+			}
+		}
+	}()
+
+	// Periodically sweep expired sticky-store entries. Lazy eviction only fires
+	// when a key is re-read; one-shot conversations (routed subagents) never
+	// are, so without this the map grows monotonically. Behavior-preserving:
+	// Prune uses the same TTL predicate as GetAt.
+	pruneTicker := time.NewTicker(stickyPruneInterval)
+	defer pruneTicker.Stop()
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-pruneTicker.C:
+				if s.stickyStore != nil {
+					if n := s.stickyStore.Prune(time.Now()); n > 0 {
+						logging.Debugf("sticky: pruned %d expired entries (live=%d)", n, s.stickyStore.Len())
+					}
+				}
 			}
 		}
 	}()

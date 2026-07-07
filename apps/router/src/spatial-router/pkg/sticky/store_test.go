@@ -103,3 +103,37 @@ func TestHashIdentityStableAndDistinct(t *testing.T) {
 		t.Fatal("distinct system prompts produced same hash")
 	}
 }
+
+func TestPruneRemovesExpiredKeepsLive(t *testing.T) {
+	ttl := 6 * time.Minute
+	s := New(ttl)
+	t0 := time.Unix(1000, 0)
+	s.Record("stale", "claude-sonnet-5", 100, t0)
+	// "fresh" recorded ttl later, so it is still live at prune time.
+	s.Record("fresh", "claude-opus-4-8", 200, t0.Add(ttl))
+
+	// Prune at a moment where "stale" is past TTL but "fresh" is not: this is
+	// the exact predicate GetAt uses (now.Sub(LastSeen) > ttl).
+	now := t0.Add(ttl + time.Second)
+	if removed := s.Prune(now); removed != 1 {
+		t.Fatalf("Prune removed = %d, want 1", removed)
+	}
+	if got := s.Len(); got != 1 {
+		t.Fatalf("Len after prune = %d, want 1", got)
+	}
+	// Survivor is the fresh entry and still readable.
+	if e, ok := s.GetAt("fresh", now); !ok || e.LastModel != "claude-opus-4-8" {
+		t.Fatalf("expected fresh entry live, got ok=%v model=%q", ok, e.LastModel)
+	}
+	// A GetAt on the pruned key agrees it is absent (predicate parity).
+	if _, ok := s.GetAt("stale", now); ok {
+		t.Fatal("expected stale entry gone after prune")
+	}
+}
+
+func TestPruneEmptyStore(t *testing.T) {
+	s := New(6 * time.Minute)
+	if removed := s.Prune(time.Unix(1000, 0)); removed != 0 {
+		t.Fatalf("Prune on empty store removed = %d, want 0", removed)
+	}
+}
