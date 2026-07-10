@@ -8,7 +8,7 @@ import (
 func TestRecordAndGet(t *testing.T) {
 	s := New(6 * time.Minute)
 	t0 := time.Unix(1000, 0)
-	s.Record("conv-a", "claude-opus-4-8", 12000, t0)
+	s.Record("conv-a", "claude-opus-4-8", 12000, false, t0)
 
 	e, ok := s.GetAt("conv-a", t0.Add(time.Minute))
 	if !ok {
@@ -32,7 +32,7 @@ func TestGetMissing(t *testing.T) {
 func TestExpiryTreatedAsAbsent(t *testing.T) {
 	s := New(6 * time.Minute)
 	t0 := time.Unix(1000, 0)
-	s.Record("conv-a", "claude-haiku-4-5", 500, t0)
+	s.Record("conv-a", "claude-haiku-4-5", 500, false, t0)
 
 	// Just before TTL: present.
 	if _, ok := s.GetAt("conv-a", t0.Add(6*time.Minute)); !ok {
@@ -58,10 +58,10 @@ func TestLastWriteWinsOnArrival(t *testing.T) {
 	older := base.Add(1 * time.Second)
 
 	// The turn that arrived later is recorded first.
-	s.Record("conv-a", "claude-opus-4-8", 40000, newer)
+	s.Record("conv-a", "claude-opus-4-8", 40000, false, newer)
 	// A turn that arrived earlier completes its bookkeeping afterwards: must NOT
 	// overwrite the fresher entry.
-	s.Record("conv-a", "claude-haiku-4-5", 500, older)
+	s.Record("conv-a", "claude-haiku-4-5", 500, false, older)
 
 	e, ok := s.GetAt("conv-a", newer.Add(time.Minute))
 	if !ok {
@@ -78,13 +78,30 @@ func TestLastWriteWinsOnArrival(t *testing.T) {
 func TestRecordEqualTimestampIgnored(t *testing.T) {
 	s := New(6 * time.Minute)
 	t0 := time.Unix(1000, 0)
-	s.Record("conv-a", "claude-opus-4-8", 40000, t0)
+	s.Record("conv-a", "claude-opus-4-8", 40000, false, t0)
 	// Same arrival timestamp: treated as not-newer, first write wins.
-	s.Record("conv-a", "claude-haiku-4-5", 500, t0)
+	s.Record("conv-a", "claude-haiku-4-5", 500, false, t0)
 
 	e, _ := s.GetAt("conv-a", t0.Add(time.Minute))
 	if e.LastModel != "claude-opus-4-8" {
 		t.Fatalf("equal-timestamp write overwrote: got %q", e.LastModel)
+	}
+}
+
+func TestRecordCompactedFlag(t *testing.T) {
+	s := New(6 * time.Minute)
+	t0 := time.Unix(1000, 0)
+	// A compacted switch turn.
+	s.Record("conv-a", "claude-haiku-4-5", 8000, true, t0)
+	e, ok := s.GetAt("conv-a", t0.Add(time.Minute))
+	if !ok || !e.Compacted {
+		t.Fatalf("expected Compacted=true, got ok=%v compacted=%v", ok, e.Compacted)
+	}
+	// A later non-compacted turn overwrites the flag.
+	s.Record("conv-a", "claude-haiku-4-5", 8000, false, t0.Add(2*time.Minute))
+	e, _ = s.GetAt("conv-a", t0.Add(3*time.Minute))
+	if e.Compacted {
+		t.Fatal("expected Compacted=false after a non-compacted turn")
 	}
 }
 
@@ -108,9 +125,9 @@ func TestPruneRemovesExpiredKeepsLive(t *testing.T) {
 	ttl := 6 * time.Minute
 	s := New(ttl)
 	t0 := time.Unix(1000, 0)
-	s.Record("stale", "claude-sonnet-5", 100, t0)
+	s.Record("stale", "claude-sonnet-5", 100, false, t0)
 	// "fresh" recorded ttl later, so it is still live at prune time.
-	s.Record("fresh", "claude-opus-4-8", 200, t0.Add(ttl))
+	s.Record("fresh", "claude-opus-4-8", 200, false, t0.Add(ttl))
 
 	// Prune at a moment where "stale" is past TTL but "fresh" is not: this is
 	// the exact predicate GetAt uses (now.Sub(LastSeen) > ttl).

@@ -79,10 +79,25 @@ type AnthropicPassthroughConfig struct {
 	// model selection. "" / "off" (default) is the historic behavior: the skill
 	// router picks the model per request with no cross-turn memory. "sticky"
 	// enables cache-aware hysteresis — stay on the conversation's previous model
-	// unless switching is worth the prompt-cache invalidation cost. "orchestrator"
-	// is the shadow-mode v2 path (computed, not served). See EffectiveRoutingMode
-	// and pkg/proxy/anthropic.go.
+	// unless switching is worth the prompt-cache invalidation cost. "smartsqueeze"
+	// keeps that same hysteresis but, when a switch IS taken, compacts the
+	// forwarded context (clears old tool_result blocks) so the new model reprocesses
+	// a small prefix instead of the full one. "orchestrator" is the shadow-mode v2
+	// path (computed, not served). See EffectiveRoutingMode and pkg/proxy/anthropic.go.
 	RoutingMode string `yaml:"routing_mode,omitempty"`
+
+	// CompactKeepRecentTurns is how many trailing messages the smartsqueeze
+	// compactor keeps raw; older tool_result blocks are cleared. Defaults to 3
+	// when zero. Only consulted in "smartsqueeze" mode. See
+	// EffectiveCompactKeepRecentTurns and pkg/compaction.
+	CompactKeepRecentTurns int `yaml:"compact_keep_recent_turns,omitempty"`
+
+	// CompactShadowOnly gates the smartsqueeze rollout. When true (the default),
+	// Brick computes and logs the estimated token saving on a switch turn but
+	// forwards the RAW body — measurement without behavior change. A pointer so an
+	// absent key defaults to true (shadow-first). Set false to actually serve the
+	// compacted body. See CompactServed.
+	CompactShadowOnly *bool `yaml:"compact_shadow_only,omitempty"`
 
 	// StickyTTLSeconds is the lifetime of a conversation's sticky routing entry.
 	// Defaults to 360 (6 min) when zero — just over the 5-minute Anthropic prompt
@@ -102,6 +117,7 @@ type AnthropicPassthroughConfig struct {
 const (
 	RoutingModeOff          = "off"
 	RoutingModeSticky       = "sticky"
+	RoutingModeSmartSqueeze = "smartsqueeze"
 	RoutingModeOrchestrator = "orchestrator"
 )
 
@@ -184,11 +200,33 @@ func (c *AnthropicPassthroughConfig) EffectiveFixedModel() string {
 // routing (no cross-turn memory) is always the safe fallback.
 func (c *AnthropicPassthroughConfig) EffectiveRoutingMode() string {
 	switch c.RoutingMode {
-	case RoutingModeSticky, RoutingModeOrchestrator:
+	case RoutingModeSticky, RoutingModeSmartSqueeze, RoutingModeOrchestrator:
 		return c.RoutingMode
 	default:
 		return RoutingModeOff
 	}
+}
+
+// EffectiveCompactKeepRecentTurns returns the configured number of trailing
+// messages kept raw by the smartsqueeze compactor, or the default of 3.
+func (c *AnthropicPassthroughConfig) EffectiveCompactKeepRecentTurns() int {
+	if c.CompactKeepRecentTurns > 0 {
+		return c.CompactKeepRecentTurns
+	}
+	return 3
+}
+
+// CompactShadow reports whether smartsqueeze is in shadow mode (compute and log
+// the estimated saving, forward the raw body). Defaults to true when the key is
+// absent, so the first rollout never changes what is served.
+func (c *AnthropicPassthroughConfig) CompactShadow() bool {
+	return c.CompactShadowOnly == nil || *c.CompactShadowOnly
+}
+
+// CompactServed reports whether smartsqueeze actually forwards the compacted
+// body (the inverse of shadow mode).
+func (c *AnthropicPassthroughConfig) CompactServed() bool {
+	return !c.CompactShadow()
 }
 
 // EffectiveStickyTTLSeconds returns the configured sticky-entry TTL or the

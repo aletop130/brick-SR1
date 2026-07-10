@@ -73,7 +73,7 @@ func TestApplySticky_HoldsBelowMargin(t *testing.T) {
 	// large cached prefix, so an upswitch is a costed switch.
 	sys, first := extractAnthropicIdentityParts([]byte(stickyBody))
 	key := sticky.HashIdentity(sys, first)
-	s.stickyStore.Record(key, "claude-haiku-4-5", 40000, time.Now())
+	s.stickyStore.Record(key, "claude-haiku-4-5", 40000, false, time.Now())
 
 	// Router now wants opus, but only a small quality gain (0.50 -> 0.45 = 0.05 < margin).
 	route := routeWith("claude-opus-4-8", map[string]float64{"claude-opus-4-8": 0.45, "claude-haiku-4-5": 0.50})
@@ -90,7 +90,7 @@ func TestApplySticky_SwitchesAboveMargin(t *testing.T) {
 
 	sys, first := extractAnthropicIdentityParts([]byte(stickyBody))
 	key := sticky.HashIdentity(sys, first)
-	s.stickyStore.Record(key, "claude-haiku-4-5", 40000, time.Now())
+	s.stickyStore.Record(key, "claude-haiku-4-5", 40000, false, time.Now())
 
 	// Large quality gain (0.50 -> 0.20 = 0.30 > margin): the switch is justified.
 	route := routeWith("claude-opus-4-8", map[string]float64{"claude-opus-4-8": 0.20, "claude-haiku-4-5": 0.50})
@@ -108,7 +108,7 @@ func TestApplySticky_CheapDownswitchAllowed(t *testing.T) {
 	sys, first := extractAnthropicIdentityParts([]byte(stickyBody))
 	key := sticky.HashIdentity(sys, first)
 	// Warm on opus with a big prefix; router now wants haiku.
-	s.stickyStore.Record(key, "claude-opus-4-8", 40000, time.Now())
+	s.stickyStore.Record(key, "claude-opus-4-8", 40000, false, time.Now())
 
 	route := routeWith("claude-haiku-4-5", map[string]float64{"claude-haiku-4-5": 0.55, "claude-opus-4-8": 0.40})
 

@@ -37,7 +37,13 @@ export default class ClaudeSettingsShow extends Command {
     const subagents = obj?.anthropic_passthrough?.route_subagents ? 'on (routed through Brick)' : 'off (bypass)';
     const rmRaw = obj?.anthropic_passthrough?.routing_mode;
     const routingMode =
-      rmRaw === 'sticky' ? 'sticky (cache-aware)' : rmRaw === 'orchestrator' ? 'orchestrator (shadow)' : 'off (per-request)';
+      rmRaw === 'sticky'
+        ? 'sticky (cache-aware)'
+        : rmRaw === 'smartsqueeze'
+          ? 'smartsqueeze (cache-aware + compaction)'
+          : rmRaw === 'orchestrator'
+            ? 'orchestrator (shadow)'
+            : 'off (per-request)';
 
     print(`profile:            ${profile}`);
     print(`context-awareness:  ${ctx}`);

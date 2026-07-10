@@ -70,7 +70,7 @@ The image is published on Docker Hub (public, no login required). Run the gatewa
 ```bash
 docker run --rm -p 18000:18000 \
   -e REGOLO_API_KEY=$REGOLO_API_KEY \
-  docker.io/regolo/brick:latest      # or pin a version: docker.io/regolo/brick:2.1.2
+  docker.io/regolo/brick:latest      # or pin a version: docker.io/regolo/brick:2.2.0
 ```
 
 Then call it like any OpenAI endpoint, just set `"model": "brick"`:
@@ -160,6 +160,8 @@ Selecting **opus**, **sonnet**, or **haiku** explicitly in the picker skips Bric
 ### Cache-aware (sticky) routing
 
 Switching models mid-conversation invalidates the prompt cache: each provider's KV cache is per-model and opaque, so the new model has to reprocess the whole context at full input price. Brick's **sticky routing** keeps a conversation on its current model unless switching is actually worth it: downswitching to a cheaper model is always free, upswitching only happens when the estimated quality gain clears the cost of re-priming the cache. Enable it with `routing_mode: sticky` ([`brick claude settings mode`](#the-5-modes-pick-your-costquality-trade-off)).
+
+**`smartsqueeze`** takes the opposite tack: instead of avoiding switches, it makes them cheap. It keeps the same cache-aware hysteresis as `sticky`, but when a switch *is* taken it compacts the forwarded context (clearing older `tool_result` blocks, keeping recent turns raw) so the new model reprocesses a small prefix instead of the full one. The compaction is deterministic and model-agnostic (works across providers, not just Anthropic), never touches the system prompt or first user turn, and only fires on a switch (a warm cache is never disturbed). Enable it with `routing_mode: smartsqueeze`; it ships shadow-first (`compact_shadow_only: true` measures the saving without changing what is served) so you can quantify the win before turning it on.
 
 ### Observability
 
@@ -343,7 +345,7 @@ Per-component docs: [router](apps/router/README.md) · [CLI](apps/cli/README.md)
 | Channel | Status |
 |---|---|
 | Source clone + `npm link` | available |
-| Docker Hub (`docker.io/regolo/brick`) | available (tag `v2.1.2`) |
+| Docker Hub (`docker.io/regolo/brick`) | available (tag `v2.2.0`) |
 | npm (`@regolo-ai/brick`) | pending `NPM_TOKEN` secret |
 
 </details>

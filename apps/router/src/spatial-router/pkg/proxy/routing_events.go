@@ -28,6 +28,11 @@ type routingEvent struct {
 	ServedModel    string  `json:"served_model"`
 	CtxTokens      int64   `json:"ctx_tokens"`
 	EstSwitchDelta float64 `json:"est_switch_delta_price_units"`
+	// EstSavedTokens is the smartsqueeze compactor's estimate of prefix tokens
+	// removed on this turn (0 outside smartsqueeze mode, or when nothing was
+	// cleared). Populated in both shadow and served sub-modes so the aggregator
+	// can report realized-vs-shadow savings.
+	EstSavedTokens int64   `json:"est_saved_tokens,omitempty"`
 	E2ELatencyMs   int64   `json:"e2e_latency_ms"`
 	ShadowNote     string  `json:"shadow_note,omitempty"`
 }

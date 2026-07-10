@@ -143,6 +143,8 @@ const ROUTING_MODE_MESSAGE: Record<RoutingMode, (profile: string) => string> = {
   off: (p) => `cache-aware routing OFF for profile '${p}': per-request routing, no cross-turn memory.`,
   sticky: (p) =>
     `cache-aware sticky routing ON for profile '${p}': Brick stays on a conversation's model unless a switch beats the prompt-cache cost.`,
+  smartsqueeze: (p) =>
+    `smartsqueeze routing ON for profile '${p}': sticky hysteresis plus context compaction on a switch, so the new model reprocesses a small prefix.`,
   orchestrator: (p) =>
     `orchestrator routing (SHADOW) for profile '${p}': computed for evaluation, not yet served.`,
 };

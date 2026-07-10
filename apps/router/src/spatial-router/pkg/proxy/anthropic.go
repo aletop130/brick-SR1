@@ -255,8 +255,9 @@ func (s *Server) handleBrickRouted(
 	candidateModel := selectedModel
 	stickyKey := ""
 	switchDelta := 0.0
+	compacted := false
 	switch apCfg.EffectiveRoutingMode() {
-	case config.RoutingModeSticky:
+	case config.RoutingModeSticky, config.RoutingModeSmartSqueeze:
 		if routedViaSkill && apCfg.ModelRoutingEnabled() && routeResult != nil {
 			stickyKey, selectedModel, under, switchDelta = s.applyStickyRouting(apCfg, body, routeResult, selectedModel, under)
 		}
@@ -284,6 +285,14 @@ func (s *Server) handleBrickRouted(
 		if mode == config.RoutingModeOrchestrator {
 			ev.ShadowNote = "shadow_only_not_served_extractor_pending"
 		}
+	}
+
+	// Smartsqueeze compaction: on a switch the new provider's prompt cache is cold,
+	// so shrink the forwarded context (clear old tool_result blocks) to cut the
+	// prefix the new model reprocesses. No-op outside smartsqueeze mode, on a hold,
+	// or in shadow sub-mode (where it only measures). See applySmartSqueeze.
+	if apCfg.EffectiveRoutingMode() == config.RoutingModeSmartSqueeze {
+		body, compacted = s.applySmartSqueeze(apCfg, body, stickyKey, selectedModel, ev)
 	}
 
 	metrics.BrickCCRequests.WithLabelValues(label, selectedModel).Inc()
@@ -319,7 +328,7 @@ func (s *Server) handleBrickRouted(
 	logging.Infof("AnthropicPassthrough[brick]: mode_effort=%s preference=%.2f complexity=%s tau=%.3f under=%.3f auto_effort=%s model=%s use_1m=%t bytes=%d",
 		clientEffort, preference, label, tauQuery, under, effortStr, selectedModel, use1M, len(rewritten))
 
-	s.forwardAnthropicRequest(w, r, apCfg, rewritten, selectedModel, label, effortStr, routedViaSkill, stripBeta, stickyKey, ev)
+	s.forwardAnthropicRequest(w, r, apCfg, rewritten, selectedModel, label, effortStr, routedViaSkill, stripBeta, stickyKey, compacted, ev)
 }
 
 // underCapacityForModel returns the under-capacity residual of the named model
@@ -362,7 +371,7 @@ func (s *Server) handleNativeModel(
 	logging.Infof("AnthropicPassthrough[native]: model=%s use_1m=%t upstream=%s bytes=%d",
 		requestedModel, use1M, apCfg.EffectiveUpstreamURL(), len(rewritten))
 
-	s.forwardAnthropicRequest(w, r, apCfg, rewritten, requestedModel, "native", "", false, stripBeta, "", nil)
+	s.forwardAnthropicRequest(w, r, apCfg, rewritten, requestedModel, "native", "", false, stripBeta, "", false, nil)
 }
 
 // forwardAnthropicRequest sends the (possibly rewritten) body to the Anthropic
@@ -377,6 +386,7 @@ func (s *Server) forwardAnthropicRequest(
 	routedViaSkill bool,
 	stripBeta bool,
 	stickyKey string,
+	compacted bool,
 	ev *routingEvent,
 ) {
 	// start bounds Brick's end-to-end view of this request: upstream request
@@ -495,7 +505,7 @@ func (s *Server) forwardAnthropicRequest(
 	// fresh input + both cache tiers.
 	if stickyKey != "" && s.stickyStore != nil {
 		ctxTokens := usage.InputTokens + usage.CacheReadInputTokens + usage.CacheCreationInputTokens
-		s.stickyStore.Record(stickyKey, selectedModel, ctxTokens, time.Now())
+		s.stickyStore.Record(stickyKey, selectedModel, ctxTokens, compacted, time.Now())
 	}
 
 	// Routing event: fill the post-response fields and append. Off the client's

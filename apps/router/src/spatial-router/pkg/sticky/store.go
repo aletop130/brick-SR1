@@ -22,6 +22,11 @@ type Entry struct {
 	// LastContextTokens is input+cache_read+cache_creation of the last response,
 	// i.e. the size of the prefix that would have to be reprocessed on a switch.
 	LastContextTokens int64
+	// Compacted reports whether the last turn was served with smartsqueeze
+	// compaction. When true, subsequent same-model turns keep compacting
+	// deterministically so the new model's cache stays warm on the reduced prefix
+	// (see pkg/compaction and pkg/proxy/anthropic.go). Always false in sticky mode.
+	Compacted bool
 }
 
 // Store holds per-conversation sticky routing state with a TTL. An entry older
@@ -65,14 +70,15 @@ func (s *Store) Get(key string) (Entry, bool) { return s.GetAt(key, time.Now()) 
 // response-arrival timestamp arrivedAt. A write whose arrivedAt is not strictly
 // newer than the stored LastSeen is ignored, so an out-of-order or concurrent
 // response (parallel tool calls on one conversation) never clobbers fresher
-// state with stale numbers.
-func (s *Store) Record(key, model string, contextTokens int64, arrivedAt time.Time) {
+// state with stale numbers. compacted records whether smartsqueeze served a
+// compacted body this turn, so the next turn can keep the reduced prefix stable.
+func (s *Store) Record(key, model string, contextTokens int64, compacted bool, arrivedAt time.Time) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if e, ok := s.m[key]; ok && !arrivedAt.After(e.LastSeen) {
 		return
 	}
-	s.m[key] = Entry{LastModel: model, LastSeen: arrivedAt, LastContextTokens: contextTokens}
+	s.m[key] = Entry{LastModel: model, LastSeen: arrivedAt, LastContextTokens: contextTokens, Compacted: compacted}
 }
 
 // Prune removes every entry already expired at now, returning the count

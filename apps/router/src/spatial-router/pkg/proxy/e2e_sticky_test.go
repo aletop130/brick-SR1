@@ -51,7 +51,7 @@ func TestStickyEndToEnd(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/messages", bytes.NewReader([]byte(stickyBody)))
 	rec := httptest.NewRecorder()
-	s.forwardAnthropicRequest(rec, req, apCfg, []byte(stickyBody), "claude-opus-4-8", "hard", "", true, false, key, nil)
+	s.forwardAnthropicRequest(rec, req, apCfg, []byte(stickyBody), "claude-opus-4-8", "hard", "", true, false, key, false, nil)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("forward status = %d, want 200", rec.Code)

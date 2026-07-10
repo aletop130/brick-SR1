@@ -47,7 +47,7 @@ export const REGOLO_API_KEY_HELP =
 export type ComputeMode = 'local' | 'api';
 
 /** Cache-aware routing mode. Mirrors the Go AnthropicPassthroughConfig.RoutingMode. */
-export type RoutingMode = 'off' | 'sticky' | 'orchestrator';
+export type RoutingMode = 'off' | 'sticky' | 'smartsqueeze' | 'orchestrator';
 
 export interface SettingsApplyResult {
   configPath: string;
@@ -138,9 +138,11 @@ export async function applySubagentRouting(
 /**
  * Select the cache-aware routing mode: writes anthropic_passthrough.routing_mode.
  * 'off' (default) keeps the historic per-request routing with no cross-turn
- * memory; 'sticky' enables cache-aware hysteresis; 'orchestrator' is the
- * shadow-mode v2 path. 'off' is stored by removing the key so the YAML stays
- * clean and the Go EffectiveRoutingMode() default applies. No-op when unchanged.
+ * memory; 'sticky' enables cache-aware hysteresis; 'smartsqueeze' keeps that
+ * hysteresis but compacts the context on a switch so the new model reprocesses a
+ * small prefix; 'orchestrator' is the shadow-mode v2 path. 'off' is stored by
+ * removing the key so the YAML stays clean and the Go EffectiveRoutingMode()
+ * default applies. No-op when unchanged.
  * Requires an anthropic_passthrough block (created by `brick claude on`).
  */
 export async function applyRoutingMode(
@@ -155,6 +157,7 @@ export async function applyRoutingMode(
   }
   const cur: RoutingMode =
     obj.anthropic_passthrough.routing_mode === 'sticky' ||
+    obj.anthropic_passthrough.routing_mode === 'smartsqueeze' ||
     obj.anthropic_passthrough.routing_mode === 'orchestrator'
       ? obj.anthropic_passthrough.routing_mode
       : 'off';

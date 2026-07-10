@@ -14,10 +14,12 @@ import (
 //
 // This is deliberately a stub, not a running orchestrator. The load-bearing v2
 // piece — the classifier-as-extractor that emits the minimal context slice for a
-// stateless subagent call — is intentionally NOT built here; it is the shared
-// net-new component the design gates behind evaluation of mode A. Until it lands,
-// this logs the candidate route and the prompt size so a shadow analysis can be
-// assembled from logs, and nothing is served differently.
+// stateless subagent call — is realized separately as the "smartsqueeze" routing
+// mode (pkg/compaction + the smartsqueeze branch in handleBrickRouted), which
+// serves a compacted context on model switches. This orchestrator stub remains a
+// shadow-only observation point for the fuller inverted-orchestrator design; it
+// logs the candidate route and prompt size so a shadow analysis can be assembled
+// from logs, and nothing is served differently.
 //
 // It does NOT emit a fabricated est_saved_usd: without the extractor there is no
 // honest slice-reduction figure to report. The promotion gate metrics
