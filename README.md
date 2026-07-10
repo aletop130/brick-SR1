@@ -517,10 +517,12 @@ Pre-built PDF: [`docs/paper/paper.pdf`](docs/paper/paper.pdf) · compile with `c
 
 ### 📈 Star history
 
+## Star History
+
 <a href="https://www.star-history.com/?repos=regolo-ai%2Fbrick-SR1&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=regolo-ai/brick-SR1&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=regolo-ai/brick-SR1&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=regolo-ai/brick-SR1&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=regolo-ai/brick-SR1&type=date&theme=dark&legend=top-left&sealed_token=q-PeWQ444lcRml8boNn1kZvBAYJU03H3xb_81z38UFyj8-vmvg1k1c8IaQOFDwkOLi50jgf7Dmz27j_HjJUYqrF1Q4Si3A2OPIGGQHsJwOhHFrgdI1wymQ" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=regolo-ai/brick-SR1&type=date&legend=top-left&sealed_token=q-PeWQ444lcRml8boNn1kZvBAYJU03H3xb_81z38UFyj8-vmvg1k1c8IaQOFDwkOLi50jgf7Dmz27j_HjJUYqrF1Q4Si3A2OPIGGQHsJwOhHFrgdI1wymQ" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=regolo-ai/brick-SR1&type=date&legend=top-left&sealed_token=q-PeWQ444lcRml8boNn1kZvBAYJU03H3xb_81z38UFyj8-vmvg1k1c8IaQOFDwkOLi50jgf7Dmz27j_HjJUYqrF1Q4Si3A2OPIGGQHsJwOhHFrgdI1wymQ" />
  </picture>
 </a>
