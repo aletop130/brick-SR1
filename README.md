@@ -517,10 +517,10 @@ Pre-built PDF: [`docs/paper/paper.pdf`](docs/paper/paper.pdf) · compile with `c
 
 ### 📈 Star history
 
-<a href="https://www.star-history.com/?repos=regolo-ai%2Fbrick-SR1&type=date&legend=top-left">
+<a href="https://github.com/regolo-ai/brick-SR1/stargazers">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=regolo-ai/brick-SR1&type=date&theme=dark&legend=top-left&sealed_token=hvZh2lSlFDmdzKmA3f_ObGEbo7A7qbjlWI4alWndLlzbqi7srbUwQpX9tOuPYTcYD3UKxOhgz7VLWw8-naJI-BgXllgxnkdi0sVu5LXNyhwK9Bex1ZWaTJ9_0WXMEby3QVXuyuMtVZmFr-8H8E3z-qLlVWgbdBYJ3Y2A9-t_NdMX3nob9bzKl_p8czk6" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=regolo-ai/brick-SR1&type=date&legend=top-left&sealed_token=hvZh2lSlFDmdzKmA3f_ObGEbo7A7qbjlWI4alWndLlzbqi7srbUwQpX9tOuPYTcYD3UKxOhgz7VLWw8-naJI-BgXllgxnkdi0sVu5LXNyhwK9Bex1ZWaTJ9_0WXMEby3QVXuyuMtVZmFr-8H8E3z-qLlVWgbdBYJ3Y2A9-t_NdMX3nob9bzKl_p8czk6" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=regolo-ai/brick-SR1&type=date&legend=top-left&sealed_token=hvZh2lSlFDmdzKmA3f_ObGEbo7A7qbjlWI4alWndLlzbqi7srbUwQpX9tOuPYTcYD3UKxOhgz7VLWw8-naJI-BgXllgxnkdi0sVu5LXNyhwK9Bex1ZWaTJ9_0WXMEby3QVXuyuMtVZmFr-8H8E3z-qLlVWgbdBYJ3Y2A9-t_NdMX3nob9bzKl_p8czk6" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/regolo-ai/brick-SR1/main/docs/assets/star-history/star-history-dark.svg" />
+   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/regolo-ai/brick-SR1/main/docs/assets/star-history/star-history-light.svg" />
+   <img alt="Star History Chart" src="https://raw.githubusercontent.com/regolo-ai/brick-SR1/main/docs/assets/star-history/star-history-light.svg" />
  </picture>
 </a>

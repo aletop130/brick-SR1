@@ -1,0 +1,46 @@
+name: Star history
+
+on:
+  schedule:
+    # 3x/day (UTC): 02:17, 10:17, 18:17 — off the hour to dodge cron congestion
+    - cron: "17 2,10,18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: star-history
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate star history SVGs
+        env:
+          # GITHUB_TOKEN is a collaborator on this repo, so the stargazers
+          # endpoint (restricted to admins/collaborators) is readable here.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/gen_star_history.py \
+            --repo "${{ github.repository }}" \
+            --out docs/assets/star-history
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- docs/assets/star-history; then
+            echo "No change in star history chart."
+            exit 0
+          fi
+          git add docs/assets/star-history
+          git commit -m "chore: refresh star history chart [skip ci]"
+          git push
