@@ -517,7 +517,6 @@ Pre-built PDF: [`docs/paper/paper.pdf`](docs/paper/paper.pdf) · compile with `c
 
 ### 📈 Star history
 
-## Star History
 
 <a href="https://www.star-history.com/?repos=regolo-ai%2Fbrick-SR1&type=date&legend=top-left">
  <picture>
