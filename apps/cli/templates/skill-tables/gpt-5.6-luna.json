@@ -1,0 +1,36 @@
+{
+  "model": "gpt-5.6-luna",
+  "provider": "openai",
+  "capabilities": [
+    "coding",
+    "creative_synthesis",
+    "instruction_following",
+    "math_reasoning",
+    "planning_agentic",
+    "world_knowledge"
+  ],
+  "skill_vector": [
+    0.65,
+    0.55,
+    0.70,
+    0.82,
+    0.65,
+    0.78
+  ],
+  "source": "benchmark",
+  "confidence": [
+    "medium",
+    "low",
+    "medium",
+    "medium",
+    "low",
+    "medium"
+  ],
+  "imputed_capabilities": [
+    "creative_synthesis"
+  ],
+  "support": null,
+  "subset_hash": null,
+  "date": "2026-07-10",
+  "notes": "Benchmark-derived skill vector for GPT-5.6 Luna, the cost-sensitive reasoning model."
+}

@@ -1,0 +1,36 @@
+{
+  "model": "gpt-5.6-sol",
+  "provider": "openai",
+  "capabilities": [
+    "coding",
+    "creative_synthesis",
+    "instruction_following",
+    "math_reasoning",
+    "planning_agentic",
+    "world_knowledge"
+  ],
+  "skill_vector": [
+    0.94,
+    0.85,
+    0.88,
+    0.97,
+    0.92,
+    0.96
+  ],
+  "source": "benchmark",
+  "confidence": [
+    "high",
+    "medium",
+    "high",
+    "high",
+    "high",
+    "high"
+  ],
+  "imputed_capabilities": [
+    "creative_synthesis"
+  ],
+  "support": null,
+  "subset_hash": null,
+  "date": "2026-07-10",
+  "notes": "Benchmark-derived skill vector for GPT-5.6 Sol, the new flagship reasoning model."
+}
