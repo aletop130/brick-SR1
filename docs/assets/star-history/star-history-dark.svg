@@ -9,9 +9,9 @@
   <line x1="64" y1="368" x2="748" y2="368" stroke="#8b949e" stroke-width="1.2"/>
   <line x1="64" y1="46" x2="64" y2="368" stroke="#8b949e" stroke-width="1.2"/>
   <line x1="64" y1="368.0" x2="748" y2="368.0" stroke="#30363d" stroke-width="1" stroke-dasharray="3 3"/><line x1="64" y1="207.0" x2="748" y2="207.0" stroke="#30363d" stroke-width="1" stroke-dasharray="3 3"/><line x1="64" y1="46.0" x2="748" y2="46.0" stroke="#30363d" stroke-width="1" stroke-dasharray="3 3"/>
-  <path d="M 64.0 207.0 L 185.2 207.0 L 185.2 46.0 L 748.0 46.0 L 748.0 46.0 L 748.0 368.0 L 64.0 368.0 Z" fill="url(#grad-dark)"/>
-  <path d="M 64.0 207.0 L 185.2 207.0 L 185.2 46.0 L 748.0 46.0 L 748.0 46.0" fill="none" stroke="#e3b341" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M 64.0 207.0 L 181.5 207.0 L 181.5 46.0 L 748.0 46.0 L 748.0 46.0 L 748.0 368.0 L 64.0 368.0 Z" fill="url(#grad-dark)"/>
+  <path d="M 64.0 207.0 L 181.5 207.0 L 181.5 46.0 L 748.0 46.0 L 748.0 46.0" fill="none" stroke="#e3b341" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
   <circle cx="748.0" cy="46.0" r="4.5" fill="#f0c419"/>
   <text x="54" y="372.0" text-anchor="end" font-size="12" fill="#8b949e">0</text><text x="54" y="211.0" text-anchor="end" font-size="12" fill="#8b949e">1</text><text x="54" y="50.0" text-anchor="end" font-size="12" fill="#8b949e">2</text>
-  <text x="64.0" y="390" text-anchor="middle" font-size="12" fill="#8b949e">2026-07-12</text><text x="235.0" y="390" text-anchor="middle" font-size="12" fill="#8b949e">2026-07-16</text><text x="406.0" y="390" text-anchor="middle" font-size="12" fill="#8b949e">2026-07-19</text><text x="577.0" y="390" text-anchor="middle" font-size="12" fill="#8b949e">2026-07-23</text><text x="748.0" y="390" text-anchor="middle" font-size="12" fill="#8b949e">2026-07-26</text>
+  <text x="64.0" y="390" text-anchor="middle" font-size="12" fill="#8b949e">2026-07-12</text><text x="235.0" y="390" text-anchor="middle" font-size="12" fill="#8b949e">2026-07-16</text><text x="406.0" y="390" text-anchor="middle" font-size="12" fill="#8b949e">2026-07-20</text><text x="577.0" y="390" text-anchor="middle" font-size="12" fill="#8b949e">2026-07-23</text><text x="748.0" y="390" text-anchor="middle" font-size="12" fill="#8b949e">2026-07-27</text>
 </svg>
